@@ -40,25 +40,31 @@ print(NC)
 
 def get_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--target", dest="target", help="networkaddr + submask ( e.g. 192.168.1.0/24)")
-    parser.add_argument("-f", "--first-port", dest="start_port", help="first port for portscan", type=int)
-    parser.add_argument("-l", "--last-port", dest="end_port", help="last port for portscan", type=int)
-    parser.add_argument("-d", "--delay", dest="default_timeout", help="default delay for portscan is 0.01. the higher delay, the slower the scan.", type=float)
-    parser.add_argument("-v", "--verbose", action="store_true", help="mainly for debugging")
+    parser.add_argument("-t", "--target", dest="target", help="[+] networkaddr + submask ( e.g. 192.168.1.0/24)")
+    parser.add_argument("-f", "--first-port", dest="start_port", help="[+] first port for portscan", type=int)
+    parser.add_argument("-l", "--last-port", dest="end_port", help="[+] last port for portscan", type=int)
+    parser.add_argument("-d", "--delay", dest="default_timeout", help="[+] default delay for portscan is 0.01. the higher delay, the slower the scan.", type=float)
+    parser.add_argument("-v", "--verbose", action="store_true", help="[+] mainly for debugging")
     options = parser.parse_args()
     if not options.target:
         parser.error("[-] Please specify a networkaddr with it's subnetmask. --help for more information")
     if not options.start_port:
-        print("setting start port to 1")
+        #print("setting start port to 1")
         options.start_port = 1
     if not options.end_port:
         options.end_port = 1024
-        print("setting end port to " + str(options.end_port))
+        #print("setting end port to " + str(options.end_port))
     if not options.default_timeout:
-        print("setting timeout to 0.01")
+        #print("setting timeout to 0.01")
         options.default_timeout = 0.01
 
     return options
+
+def show_argumets():
+    print(Blue + Bold + "Target: " + NC + options.target)
+    print(Blue + Bold + "First Port: " + NC + str(options.start_port))
+    print(Blue + Bold + "Last Portt: " + NC + str(options.end_port))
+    print(Blue + Bold + "Delay: " + NC + str(options.default_timeout))
 
 def print_hosts(hosts):
     for host in hosts:
@@ -67,7 +73,7 @@ def print_hosts(hosts):
 def print_ports(host, ports):
     print("[+] Host: " + host)
     for port in ports:
-        print("\t[+] Open Port:" + str(port))
+        print("\t[+] Open port:" + str(port))
 
 def discover_host(ip):
     arp_request = scapy.ARP(pdst=ip)
@@ -98,25 +104,26 @@ def discover_port(host):
                 if result == 0:
                     protocolname = 'tcp'
                     service = socket.getservbyport(port, protocolname)
-                    print(Yellow + "\t[+] Open Port:" + Bold + str(port) + "\t" + service + NC)
+                    print(Yellow + "\t[+] Open port:" + Bold + str(port) + "\t" + service + NC)
                     ports.append(result)
                 s.close()
             return ports
     except socket.error:
-        print(Red + "[-] Couldn't connect to Host." + NC)
+        print(Red + "[-] Couldn't connect to host." + NC)
     except KeyboardInterrupt:
         print(Blue + "[-] Skipping host: " + Bold + host + NC)
         return 0
 
 def portscan_host(hosts):
+    print("")
     for host in hosts:
-        print(Green + "[+] Port scan started for Host:" + Bold +  host + NC)
+        print(Green + "[+] Port scan started for host: " + Bold +  host + NC)
         ports = discover_port(host)
         #print_ports(host, ports)
 
 #parse arguments passed by user
 options = get_arguments()
-
+show_argumets()
 #scan for alive hosts in the range
 host_results = discover_host(options.target)
 if options.verbose:
