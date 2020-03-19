@@ -40,11 +40,11 @@ print(NC)
 
 def get_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--target", dest="target", help="[+] networkaddr + submask ( e.g. 192.168.1.0/24)")
-    parser.add_argument("-f", "--first-port", dest="start_port", help="[+] first port for portscan", type=int)
-    parser.add_argument("-l", "--last-port", dest="end_port", help="[+] last port for portscan", type=int)
-    parser.add_argument("-d", "--delay", dest="default_timeout", help="[+] default delay for portscan is 0.01. the higher delay, the slower the scan.", type=float)
-    parser.add_argument("-v", "--verbose", action="store_true", help="[+] mainly for debugging")
+    parser.add_argument("-t", "--target", dest="target", help="networkaddr + submask ( e.g. 192.168.1.0/24)")
+    parser.add_argument("-f", "--first-port", dest="start_port", help="first port for portscan", type=int)
+    parser.add_argument("-l", "--last-port", dest="end_port", help="last port for portscan", type=int)
+    parser.add_argument("-d", "--delay", dest="default_timeout", help="default delay for portscan is 0.01. the higher delay, the slower the scan.", type=float)
+    parser.add_argument("-v", "--verbose", action="store_true", help="mainly for debugging")
     options = parser.parse_args()
     if not options.target:
         parser.error("[-] Please specify a networkaddr with it's subnetmask. --help for more information")
