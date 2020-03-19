@@ -5,13 +5,28 @@ import scapy.all as scapy
 import socket
 import sys
 from datetime import datetime as dt
-
+import os
 Bold='\033[1m'
 Red='\033[0;31m'
 Green='\033[0;32m'
 Blue='\033[0;94m'
 Yellow='\033[0;93m'
 NC='\033[0m' # No Color
+
+os.system("clear")
+
+print("\n")
+print("  /$$$$$$                                            /$$")
+print(" /$$__  $$                                          | $$  ")
+print("| $$  \__/  /$$$$$$  /$$   /$$ /$$$$$$$   /$$$$$$  /$$$$$$  ")
+print("|  $$$$$$  /$$__  $$| $$  | $$| $$__  $$ /$$__  $$|_  $$_/  ")
+print("\____  $$| $$  \ $$| $$  | $$| $$  \ $$| $$$$$$$$  | $$    ")
+print("/$$  \ $$| $$  | $$| $$  | $$| $$  | $$| $$_____/  | $$ /$$")
+print("|  $$$$$$/| $$$$$$$/|  $$$$$$$| $$  | $$|  $$$$$$$  |  $$$$/")
+print(" \______/ | $$____/  \____  $$|__/  |__/ \_______/   \___/")
+print("          | $$       /$$  | $$")
+print("          | $$      |  $$$$$$/")
+print("          |__/       \______/   ")
 
 def get_arguments():
     parser = argparse.ArgumentParser()
