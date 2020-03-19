@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 
 import argparse
@@ -24,7 +25,7 @@ def print_ports(host, ports):
     print("[+] Host: " + host)
     for port in ports:
         print("\t[+] Open Port:" + str(port))
-def scan_host(ip):
+def discover_host(ip):
     arp_request = scapy.ARP(pdst=ip)
     broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
     arp_request_broadcast = broadcast/arp_request
@@ -39,7 +40,7 @@ def scan_host(ip):
 
     return client_list
 
-def scan_port(host):
+def discover_port(host):
     #gethostname
     target = socket.gethostbyname(host)
     ports = []
@@ -55,20 +56,20 @@ def scan_port(host):
     except socket.error:
         print("[-] Couldn't connect to Host.")
     except KeyboardInterrupt:
-        print("[-] MadaFaka heeft geen geduld ofwa???")
+        print("[-] Skipping host: " + host)
         return 0
 
 def portscan_host(hosts):
     for host in hosts:
         print("[+] Port scan started for Host:" + host)
-        ports = scan_port(host)
+        ports = discover_port(host)
         #print_ports(host, ports)
 
 #parse arguments passed by user
 options = get_arguments()
 
 #scan for alive hosts in the range
-host_results = scan_host(options.target)
+host_results = discover_host(options.target)
 
 #print alive hosts in range
 print_hosts(host_results)
