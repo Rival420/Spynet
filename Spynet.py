@@ -41,7 +41,7 @@ def get_arguments():
 def print_ports(host, ports):
     print("[+] Host: " + host)
     for port in ports:
-        print("\t[+] Open Port:" + str(port))
+        print("\t[+] Open Port: " + str(port))
 def discover_host(ip):
     arp_request = scapy.ARP(pdst=ip)
     broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
@@ -69,7 +69,7 @@ def discover_port(host):
                 if result == 0:
                     protocolname = 'tcp'
                     service = socket.getservbyport(port, protocolname)
-                    print(Yellow + "\t[+] Open Port:" + Bold + str(port) + "\t" + service + NC)
+                    print(Yellow + "\t[+] Open Port: " + Bold + str(port) + "\t" + service + NC)
                     ports.append(result)
                 s.close()
             return ports
@@ -81,7 +81,7 @@ def discover_port(host):
 
 def portscan_host(hosts):
     for host in hosts:
-        print(Green + "[+] Port scan started for Host:" + Bold +  host + NC)
+        print(Green + "[+] Port scan started for Host: " + Bold +  host + NC)
         ports = discover_port(host)
         #print_ports(host, ports)
 
