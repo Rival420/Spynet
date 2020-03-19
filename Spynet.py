@@ -38,12 +38,14 @@ def scan_host(ip):
     return client_list
 
 def scan_port(host):
+    #gethostname
+    target = socket.gethostbyaddr(host)
     ports = []
     try:
             for port in range(1, 1024):
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 socket.setdefaulttimeout(1)
-                result = s.connect_ex((host, port))
+                result = s.connect_ex((target, port))
                 ports.append(result)
             return ports
     except socket.error:
@@ -66,3 +68,7 @@ print_hosts(host_results)
 #start portscan for each host alive and perform version and service scan
 portscan_host(host_results)
 
+
+
+
+#TODO Exclude Adderss
