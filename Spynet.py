@@ -18,12 +18,12 @@ def get_arguments():
 
 def print_hosts(alive_hosts):
     for host in alive_hosts:
-        print("[+] IP: " + host["ip"])
+        print("[+] IP: " + host)
 
 def print_ports(host, ports):
     print("[+] Host: " + host)
     for port in ports:
-        print("\t[+] Open Port:" + port)
+        print("\t[+] Open Port:" + str(port))
 def scan_host(ip):
     arp_request = scapy.ARP(pdst=ip)
     broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
@@ -32,29 +32,37 @@ def scan_host(ip):
 
     client_list = []
     for answer in answered_list:
-        client_ip = {"ip": answer[1].psrc}
+        client_ip = answer[1].psrc
+        client_ip = str(client_ip)
+        #print(client_ip)
         client_list.append(client_ip)
 
     return client_list
 
 def scan_port(host):
     #gethostname
-    target = socket.gethostbyaddr(host)
+    target = socket.gethostbyname(host)
     ports = []
     try:
             for port in range(1, 1024):
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                socket.setdefaulttimeout(1)
+                socket.setdefaulttimeout(0.01)
                 result = s.connect_ex((target, port))
-                ports.append(result)
+                if result == 0:
+                    print("\t[+] Open Port:" + str(port))
+                    ports.append(result)
             return ports
     except socket.error:
         print("[-] Couldn't connect to Host.")
+    except KeyboardInterrupt:
+        print("[-] MadaFaka heeft geen geduld ofwa???")
+        return 0
 
 def portscan_host(hosts):
     for host in hosts:
+        print("[+] Port scan started for Host:" + host)
         ports = scan_port(host)
-        print_ports(host, ports)
+        #print_ports(host, ports)
 
 #parse arguments passed by user
 options = get_arguments()
