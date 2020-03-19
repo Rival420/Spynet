@@ -63,7 +63,7 @@ def get_arguments():
 def show_argumets():
     print(Blue + Bold + "Target: " + NC + options.target)
     print(Blue + Bold + "First Port: " + NC + str(options.start_port))
-    print(Blue + Bold + "Last Portt: " + NC + str(options.end_port))
+    print(Blue + Bold + "Last Port: " + NC + str(options.end_port))
     print(Blue + Bold + "Delay: " + NC + str(options.default_timeout))
 
 def print_hosts(hosts):
