@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 
 os.system("clear")
 
-print("\n")
+print("\n" + Green + Bold)
 print("  /$$$$$$                                            /$$")
 print(" /$$__  $$                                          | $$  ")
 print("| $$  \__/  /$$$$$$  /$$   /$$ /$$$$$$$   /$$$$$$  /$$$$$$  ")
@@ -26,9 +26,10 @@ print("|  $$$$$$/| $$$$$$$/|  $$$$$$$| $$  | $$|  $$$$$$$  |  $$$$/")
 print(" \______/ | $$____/  \____  $$|__/  |__/ \_______/   \___/")
 print("          | $$       /$$  | $$")
 print("          | $$      |  $$$$$$/")
-print("          |__/       \______/   ")
+print("          |__/       \______/   " + NC)
+print("")
+print("\t" + Red + "Made by: " + Bold + "Rival23 " + NC + Red + "and " + Bold + "Requird" + NC)
 print("\n")
-
 def get_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--target", dest="target", help="{+} networkaddr + submask ( e.g. 192.168.1.0/24)")
