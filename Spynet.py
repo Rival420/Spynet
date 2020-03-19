@@ -50,8 +50,11 @@ def discover_port(host):
                 socket.setdefaulttimeout(0.01)
                 result = s.connect_ex((target, port))
                 if result == 0:
-                    print(Yellow + "\t[+] Open Port:" + Bold + str(port) + NC)
+                    protocolname = 'tcp'
+                    service = socket.getservbyport(port, protocolname)
+                    print(Yellow + "\t[+] Open Port:" + Bold + str(port) + "\t" + service + NC)
                     ports.append(result)
+                s.close()
             return ports
     except socket.error:
         print(Red + "[-] Couldn't connect to Host." + NC)
