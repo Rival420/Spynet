@@ -2,7 +2,10 @@
 
 import argparse
 import scapy.all as scapy
-import requests
+import socket
+import sys
+from datetime import datetime as dt
+
 
 
 def get_arguments():
@@ -17,7 +20,11 @@ def print_hosts(alive_hosts):
     for host in alive_hosts:
         print("[+] IP: " + host["ip"])
 
-def scan(ip):
+def print_ports(host, ports):
+    print("[+] Host: " + host)
+    for port in ports:
+        print("\t[+] Open Port:" + port)
+def scan_host(ip):
     arp_request = scapy.ARP(pdst=ip)
     broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
     arp_request_broadcast = broadcast/arp_request
@@ -30,14 +37,32 @@ def scan(ip):
 
     return client_list
 
+def scan_port(host):
+    ports = []
+    try:
+            for port in range(1, 1024):
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                socket.setdefaulttimeout(1)
+                result = s.connect_ex((host, port))
+                ports.append(result)
+            return ports
+    except socket.error:
+        print("[-] Couldn't connect to Host.")
+
+def portscan_host(hosts):
+    for host in hosts:
+        ports = scan_port(host)
+        print_ports(host, ports)
+
 #parse arguments passed by user
 options = get_arguments()
 
 #scan for alive hosts in the range
-results = scan(options.target)
+host_results = scan_host(options.target)
 
 #print alive hosts in range
-print_hosts(results)
+print_hosts(host_results)
 
 #start portscan for each host alive and perform version and service scan
+portscan_host(host_results)
 
