@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 
 import argparse
@@ -7,6 +6,11 @@ import socket
 import sys
 from datetime import datetime as dt
 
+Bold='\033[1m'
+Red='\033[0;31m'
+Green='\033[0;32m'
+Blue='\033[0;94m'
+NC='\033[0m' # No Color
 
 
 def get_arguments():
@@ -19,13 +23,13 @@ def get_arguments():
 
 def print_hosts(alive_hosts):
     for host in alive_hosts:
-        print("[+] IP: " + host)
+        print(Green + "[+] IP: " + Bold + host + NC)
 
 def print_ports(host, ports):
     print("[+] Host: " + host)
     for port in ports:
         print("\t[+] Open Port:" + str(port))
-def discover_host(ip):
+def discover_hosts(ip):
     arp_request = scapy.ARP(pdst=ip)
     broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
     arp_request_broadcast = broadcast/arp_request
@@ -54,26 +58,23 @@ def discover_port(host):
                     ports.append(result)
             return ports
     except socket.error:
-        print("[-] Couldn't connect to Host.")
+        print(Red + "[-] Couldn't connect to Host." + NC)
     except KeyboardInterrupt:
-        print("[-] Skipping host: " + host)
+        print(Blue + "[-] Skipping Host... sorry " + Bold + host + NC)
         return 0
 
 def portscan_host(hosts):
     for host in hosts:
-        print("[+] Port scan started for Host:" + host)
-        ports = discover_port(host)
-        #print_ports(host, ports)
+        print(Green + "[+] Port scan started for Host:" + Bold + host + NC)
+        discover_port(host)
+
 
 #parse arguments passed by user
 options = get_arguments()
-
 #scan for alive hosts in the range
-host_results = discover_host(options.target)
-
+host_results = discover_hosts(options.target)
 #print alive hosts in range
 print_hosts(host_results)
-
 #start portscan for each host alive and perform version and service scan
 portscan_host(host_results)
 
