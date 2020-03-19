@@ -10,8 +10,8 @@ Bold='\033[1m'
 Red='\033[0;31m'
 Green='\033[0;32m'
 Blue='\033[0;94m'
+Yellow='\033[0;93m'
 NC='\033[0m' # No Color
-
 
 def get_arguments():
     parser = argparse.ArgumentParser()
@@ -21,15 +21,11 @@ def get_arguments():
         parser.error("[-] Please specify a networkaddr with it's subnetmask. --help for more information")
     return options
 
-def print_hosts(alive_hosts):
-    for host in alive_hosts:
-        print(Green + "[+] IP: " + Bold + host + NC)
-
 def print_ports(host, ports):
     print("[+] Host: " + host)
     for port in ports:
         print("\t[+] Open Port:" + str(port))
-def discover_hosts(ip):
+def discover_host(ip):
     arp_request = scapy.ARP(pdst=ip)
     broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
     arp_request_broadcast = broadcast/arp_request
@@ -54,31 +50,31 @@ def discover_port(host):
                 socket.setdefaulttimeout(0.01)
                 result = s.connect_ex((target, port))
                 if result == 0:
-                    print("\t[+] Open Port:" + str(port))
+                    print(Yellow + "\t[+] Open Port:" + Bold + str(port) + NC)
                     ports.append(result)
             return ports
     except socket.error:
         print(Red + "[-] Couldn't connect to Host." + NC)
     except KeyboardInterrupt:
-        print(Blue + "[-] Skipping Host... sorry " + Bold + host + NC)
+        print(Blue + "[-] Skipping host: " + Bold + host + NC)
         return 0
 
 def portscan_host(hosts):
     for host in hosts:
-        print(Green + "[+] Port scan started for Host:" + Bold + host + NC)
-        discover_port(host)
-
+        print(Green + "[+] Port scan started for Host:" + Bold +  host + NC)
+        ports = discover_port(host)
+        #print_ports(host, ports)
 
 #parse arguments passed by user
 options = get_arguments()
+
 #scan for alive hosts in the range
-host_results = discover_hosts(options.target)
-#print alive hosts in range
-print_hosts(host_results)
+host_results = discover_host(options.target)
+
 #start portscan for each host alive and perform version and service scan
 portscan_host(host_results)
 
 
 
 
-#TODO Exclude Adderss
+#TODO Exclude Address
