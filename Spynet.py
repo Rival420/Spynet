@@ -27,6 +27,7 @@ print(" \______/ | $$____/  \____  $$|__/  |__/ \_______/   \___/")
 print("          | $$       /$$  | $$")
 print("          | $$      |  $$$$$$/")
 print("          |__/       \______/   ")
+print("\n")
 
 def get_arguments():
     parser = argparse.ArgumentParser()
