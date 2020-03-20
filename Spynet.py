@@ -104,7 +104,7 @@ def discover_port(host):
                 if result == 0:
                     protocolname = 'tcp'
                     service = socket.getservbyport(port, protocolname)
-                    print(Yellow + "\t[+] Open port:" + Bold + str(port) + "\t" + service + NC)
+                    print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\t" + service + NC)
                     ports.append(result)
                 s.close()
             return ports
