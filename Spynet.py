@@ -99,7 +99,7 @@ def discover_port(host):
     try:
             for port in range(options.start_port, options.end_port):
                 if options.verbose:
-                    print(str(port))
+                    print(str(port), end='\r')
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 socket.setdefaulttimeout(options.default_timeout)
                 result = s.connect_ex((target, port))
