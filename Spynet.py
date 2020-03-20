@@ -67,6 +67,7 @@ def show_argumets():
     print(Blue + Bold + "Delay: " + NC + str(options.default_timeout))
     if options.verbose:
         print(Blue + Bold + "Verbosity: " + NC + "On")
+    print("")
 
 def print_hosts(hosts):
     for host in hosts:
