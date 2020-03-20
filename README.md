@@ -7,11 +7,11 @@ Should be used like this on default LAN:
 
 I added extra functionality so you have more control over the portscan and it's range/speed
 
-First_port: -f or --first-port => can be used to specify starting port (default: 1)
-Last_port: -l or --last-port => can be used to specify the last port (default: 1024)
-* setting this higher can result in errors, make sure to adapt defaulttimeout with it11
-Default_Timeout: changing this will affect the speed of the script. (default: 0.01)
-verbosity: -v or --verbose => this is mainly for debugging purpose. this will output all ports it's scanned.
+*First_port: -f or --first-port => can be used to specify starting port (default: 1)
+* Last_port: -l or --last-port => can be used to specify the last port (default: 1024)
+** setting this higher can result in errors, make sure to adapt defaulttimeout with it11
+* Default_Timeout: changing this will affect the speed of the script. (default: 0.01)
+* verbosity: -v or --verbose => this is mainly for debugging purpose. this will output all ports it's scanned.
 
 Extra: portscan on certain host can be skipped with KeyboardInterrupt (ctrl+C)
 
