@@ -65,6 +65,8 @@ def show_argumets():
     print(Blue + Bold + "First Port: " + NC + str(options.start_port))
     print(Blue + Bold + "Last Port: " + NC + str(options.end_port))
     print(Blue + Bold + "Delay: " + NC + str(options.default_timeout))
+    if options.verbose:
+        print(Blue + Bold + "[+] Verbosity: " + NC + "On")
 
 def print_hosts(hosts):
     for host in hosts:
