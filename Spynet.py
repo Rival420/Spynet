@@ -40,14 +40,15 @@ print(NC)
 
 def get_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--target", dest="target", help="networkaddr + submask ( e.g. 192.168.1.0/24)")
+    requiredNamed = parser.add_argument_group('required named arguments')
+    requiredNamed.add_argument("-t", "--target", dest="target", help="networkaddr + submask ( e.g. 192.168.1.0/24)")
     parser.add_argument("-f", "--first-port", dest="start_port", help="first port for portscan", type=int)
     parser.add_argument("-l", "--last-port", dest="end_port", help="last port for portscan", type=int)
     parser.add_argument("-d", "--delay", dest="default_timeout", help="default delay for portscan is 0.01. the higher delay, the slower the scan.", type=float)
     parser.add_argument("-v", "--verbose", action="store_true", help="mainly for debugging")
     options = parser.parse_args()
-    if not options.target:
-        parser.error("[-] Please specify a networkaddr with it's subnetmask. --help for more information")
+    #if not options.target:
+    #    parser.error("[-] Please specify a networkaddr with it's subnetmask. --help for more information")
     if not options.start_port:
         #print("setting start port to 1")
         options.start_port = 1
@@ -67,6 +68,8 @@ def show_argumets():
     print(Blue + Bold + "Delay: " + NC + str(options.default_timeout))
     if options.verbose:
         print(Blue + Bold + "Verbosity: " + NC + "On")
+    if not options.verbose:
+        print(Blue + Bold + "Verbosity: " + NC + "Off")
     print("")
 
 def print_hosts(hosts):
@@ -76,7 +79,7 @@ def print_hosts(hosts):
 def print_ports(host, ports):
     print("[+] Host: " + host)
     for port in ports:
-        print("\t[+] Open port:" + str(port))
+        print("\t[+] Open port: " + str(port))
 
 def discover_host(ip):
     arp_request = scapy.ARP(pdst=ip)
@@ -100,11 +103,13 @@ def discover_port(host):
     try:
             for port in range(options.start_port, options.end_port):
                 if options.verbose:
-                    print(str(port), end='\r')
+                    print(Blue + str(port), end='\r')
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 socket.setdefaulttimeout(options.default_timeout)
                 result = s.connect_ex((target, port))
                 if result == 0:
+                    if options.verbose:
+                        sys.stdout.write("\033[K")
                     protocolname = 'tcp'
                     service = socket.getservbyport(port, protocolname)
                     print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\t" + service + NC)
@@ -134,7 +139,3 @@ if options.verbose:
 #start portscan for each host alive and perform version and service scan
 portscan_host(host_results)
 
-
-
-
-#TODO Exclude Address
