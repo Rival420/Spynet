@@ -1,0 +1,9 @@
+[+] Port scan started for host: 192.168.0.1
+	[+] Open port: 53	domain
+	[+] Open port: 80	http
+[+] Port scan started for host: 192.168.0.40
+[-] Skipping host: 192.168.0.40
+[+] Port scan started for host: 192.168.0.68
+	[+] Open port: 22	ssh
+	[+] Open port: 80	http
+[+] Port scan started for host: 192.168.0.125

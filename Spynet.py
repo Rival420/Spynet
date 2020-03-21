@@ -6,14 +6,13 @@ import socket
 import sys
 from datetime import datetime as dt
 import os
-import termios
-import tty
 
 Bold='\033[1m'
 Red='\033[0;31m'
 Green='\033[0;32m'
 Blue='\033[0;94m'
 Yellow='\033[0;93m'
+Pink='\033[0;95m'
 NC='\033[0m' # No Color
 
 #globalvars
@@ -129,7 +128,6 @@ def discover_port(host):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             socket.setdefaulttimeout(options.default_timeout)
             result = s.connect_ex((target, port))
-            #print(str(port) + ': ' + str(s.connect_ex((target, port))))
             if result == 0:
                 if options.verbose:
                     sys.stdout.write("\033[K")
@@ -145,10 +143,20 @@ def discover_port(host):
             if options.output:
                 logfile.write("\t[+] Open port: " + str(port) + "\tunknown" + "\n")
         except KeyboardInterrupt:
-            print(Blue + "[-] Skipping host: " + Bold + host + NC)
-            if options.output:
-                logfile.write("[-] Skipping host: " + host + "\n")
-            return 0
+            action = input("\r" + Pink + "[!] Press " + Bold + "'s'" + NC + Pink + " to skip host or " + Bold + "'k'" + NC + Pink + " to finish the script: ")
+            if (action == 's'):
+                print(Blue + "[-] Skipping host: " + Bold + host + NC)
+                if options.output:
+                    logfile.write("[-] Skipping host: " + host + "\n")
+                return 0
+            elif (action == 'k'):
+                print(Red + "[!] Exiting." + NC)
+                print("")
+                if options.output:
+                    logfile.close()
+                sys.exit(0)
+            else:
+                print(Red + "[!] Unrecognized option." + NC)
     return ports
 
 def portscan_host(hosts):
