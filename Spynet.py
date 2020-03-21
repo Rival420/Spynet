@@ -21,6 +21,10 @@ NC='\033[0m' # No Color
 
 os.system("clear")
 
+if (sys.version_info < (3, 0)):
+	print("[-] Please, run it with Python3")
+	sys.exit(0)
+
 print(Bold + Green)
 print("")
 print("  /$$$$$$                                            /$$")
