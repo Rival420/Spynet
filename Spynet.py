@@ -39,7 +39,7 @@ print(" \______/ | $$____/  \____  $$|__/  |__/ \_______/   \___/")
 print("          | $$       /$$  | $$")
 print("          | $$      |  $$$$$$/")
 print("          |__/       \______/   ")
-print("\n\t" + Red + "Made by: " + Bold + "Rival23 " + NC + Red + "and " + Bold + "Requird" + NC)
+#print("\n\t" + Red + "Made by: " + Bold + "Rival23 " + NC + Red + "and " + Bold + "Requird" + NC)
 print("")
 print(NC)
 
