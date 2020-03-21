@@ -153,6 +153,7 @@ def discover_port(host):
                 print(Red + "[!] Exiting." + NC)
                 print("")
                 if options.output:
+                    logfile.write("[!] Exiting.\n")
                     logfile.close()
                 sys.exit(0)
             else:
