@@ -6,6 +6,8 @@ import socket
 import sys
 from datetime import datetime as dt
 import os
+import termios
+import tty
 
 Bold='\033[1m'
 Red='\033[0;31m'
@@ -48,6 +50,7 @@ def get_arguments():
     parser.add_argument("-l", "--last-port", dest="end_port", help="last port for portscan", type=int)
     parser.add_argument("-d", "--delay", dest="default_timeout", help="default delay for portscan is 0.01. the higher delay, the slower the scan.", type=float)
     parser.add_argument("-v", "--verbose", action="store_true", help="mainly for debugging")
+    parser.add_argument("-o", "--output", action="store_true", help="save to log file")
     requiredNamed = parser.add_argument_group('required named arguments')
     requiredNamed.add_argument("-t", "--target", dest="target", help="networkaddr + submask ( e.g. 192.168.1.0/24)")
     options = parser.parse_args()
@@ -61,7 +64,7 @@ def get_arguments():
         #print("setting end port to " + str(options.end_port))
     if not options.default_timeout:
         #print("setting timeout to 0.01")
-        options.default_timeout = 0.01
+        options.default_timeout = 0.5
 
     return options
 
@@ -74,6 +77,10 @@ def show_argumets():
         print(Blue + Bold + "Verbosity: " + NC + "On")
     if not options.verbose:
         print(Blue + Bold + "Verbosity: " + NC + "Off")
+    if options.output:
+        print(Blue + Bold + "Save log: " + NC + "On")
+    if not options.output:
+        print(Blue + Bold + "Save log: " + NC + "Off")
     print("")
 
 def print_hosts(hosts):
@@ -100,46 +107,75 @@ def discover_host(ip):
 
     return client_list
 
+def getkey():
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        ch = sys.stdin.read(1)
+
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch
+
 def discover_port(host):
     #gethostname
     target = socket.gethostbyname(host)
     ports = []
-    try:
-            for port in range(options.start_port, options.end_port):
+    for port in range(options.start_port, options.end_port):
+        try:
+            if options.verbose:
+                print(Blue + str(port), end='\r')
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            socket.setdefaulttimeout(options.default_timeout)
+            result = s.connect_ex((target, port))
+            #print(str(port) + ': ' + str(s.connect_ex((target, port))))
+            if result == 0:
                 if options.verbose:
-                    print(Blue + str(port), end='\r')
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                socket.setdefaulttimeout(options.default_timeout)
-                result = s.connect_ex((target, port))
-                if result == 0:
-                    if options.verbose:
-                        sys.stdout.write("\033[K")
-                    protocolname = 'tcp'
-                    service = socket.getservbyport(port, protocolname)
-                    print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\t" + service + NC)
-                    ports.append(result)
-                s.close()
-            return ports
-    except socket.error:
-        print(Red + "[-] Couldn't connect to host." + NC)
-    except KeyboardInterrupt:
-        print(Blue + "[-] Skipping host: " + Bold + host + NC)
-        return 0
+                    sys.stdout.write("\033[K")
+                protocolname = 'tcp'
+                service = socket.getservbyport(port, protocolname)
+                print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\t" + service + NC)
+                if options.output:
+                    logfile.write("\t[+] Open port: " + str(port) + "\t" + service + "\n")
+                ports.append(result)
+            s.close()
+        except socket.error:
+            print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\tunknown" + NC)
+            if options.output:
+                logfile.write("\t[+] Open port: " + str(port) + "\tunknown" + "\n")
+        except KeyboardInterrupt:
+            print(Blue + "[-] Skipping host: " + Bold + host + NC)
+            if options.output:
+                logfile.write("[-] Skipping host: " + host + "\n")
+            return 0
+    return ports
 
 def portscan_host(hosts):
     print("")
     for host in hosts:
         print(Green + "[+] Port scan started for host: " + Bold +  host + NC)
+        if options.output:
+            logfile.write("[+] Port scan started for host: " + host + "\n")
         ports = discover_port(host)
         #print_ports(host, ports)
 
 #parse arguments passed by user
 options = get_arguments()
 show_argumets()
+#open log file
+if options.output:
+    if not os.path.exists('logs'):
+        os.makedirs('logs')
+    if not os.path.exists('logs/' + options.target.replace('/', '_')):
+        os.makedirs('logs/' + options.target.replace('/', '_'))
+    logfile = open("logs/" + options.target.replace('/', '_') + '/' + dt.now().strftime("%d%m%Y_%H%M%S") + '.log', 'a')
 #scan for alive hosts in the range
 host_results = discover_host(options.target)
 if options.verbose:
     print_hosts(host_results)
 #start portscan for each host alive and perform version and service scan
 portscan_host(host_results)
-
+#close log file
+if options.output:
+    logfile.close()
