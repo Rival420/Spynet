@@ -62,7 +62,7 @@ def get_arguments():
         #print("setting end port to " + str(options.end_port))
     if not options.default_timeout:
         #print("setting timeout to 0.01")
-        options.default_timeout = 0.01
+        options.default_timeout = 0.5
 
     return options
 
@@ -75,6 +75,10 @@ def show_argumets():
         print(Blue + Bold + "Verbosity: " + NC + "On")
     if not options.verbose:
         print(Blue + Bold + "Verbosity: " + NC + "Off")
+    if options.output:
+        print(Blue + Bold + "Save log: " + NC + "On")
+    if not options.output:
+        print(Blue + Bold + "Save log: " + NC + "Off")
     print("")
 
 def print_hosts(hosts):
@@ -105,33 +109,34 @@ def discover_port(host):
     #gethostname
     target = socket.gethostbyname(host)
     ports = []
-    try:
-            for port in range(options.start_port, options.end_port):
+    for port in range(options.start_port, options.end_port):
+        try:
+            if options.verbose:
+                print(Blue + str(port), end='\r')
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            socket.setdefaulttimeout(options.default_timeout)
+            result = s.connect_ex((target, port))
+            #print(str(port) + ': ' + str(s.connect_ex((target, port))))
+            if result == 0:
                 if options.verbose:
-                    print(Blue + str(port), end='\r')
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                socket.setdefaulttimeout(options.default_timeout)
-                result = s.connect_ex((target, port))
-                if result == 0:
-                    if options.verbose:
-                        sys.stdout.write("\033[K")
-                    protocolname = 'tcp'
-                    service = socket.getservbyport(port, protocolname)
-                    print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\t" + service + NC)
-                    if options.output:
-                        logfile.write("\t[+] Open port: " + str(port) + "\t" + service + "\n")
-                    ports.append(result)
-                s.close()
-            return ports
-    except socket.error:
-        print(Red + "[-] Couldn't connect to host." + NC)
-        if options.output:
-            logfile.write("[-] Couldn't connect to host." + "\n")
-    except KeyboardInterrupt:
-        print(Blue + "[-] Skipping host: " + Bold + host + NC)
-        if options.output:
-            logfile.write("[-] Skipping host: " + host + "\n")
-        return 0
+                    sys.stdout.write("\033[K")
+                protocolname = 'tcp'
+                service = socket.getservbyport(port, protocolname)
+                print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\t" + service + NC)
+                if options.output:
+                    logfile.write("\t[+] Open port: " + str(port) + "\t" + service + "\n")
+                ports.append(result)
+            s.close()
+        except socket.error:
+            print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\tunknown" + NC)
+            if options.output:
+                logfile.write("\t[+] Open port: " + str(port) + "\tunknown" + "\n")
+        except KeyboardInterrupt:
+            print(Blue + "[-] Skipping host: " + Bold + host + NC)
+            if options.output:
+                logfile.write("[-] Skipping host: " + host + "\n")
+            return 0
+    return ports
 
 def portscan_host(hosts):
     print("")
