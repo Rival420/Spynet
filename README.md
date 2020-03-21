@@ -1,5 +1,5 @@
 # Spynet
-Python tool to scan for live hosts on a network and scan for open ports.
+A tool written in *python3* to scan for live hosts on a network and scan for open ports.
 
 Should be used like this on default LAN:
 
