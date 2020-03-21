@@ -108,6 +108,7 @@ def discover_port(host):
             for port in range(options.start_port, options.end_port):
                 if options.verbose:
                     print(Blue + str(port), end='\r')
+                    #logfile.write(str(port) + "\n")
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 socket.setdefaulttimeout(options.default_timeout)
                 result = s.connect_ex((target, port))
@@ -117,29 +118,40 @@ def discover_port(host):
                     protocolname = 'tcp'
                     service = socket.getservbyport(port, protocolname)
                     print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\t" + service + NC)
+                    logfile.write("\t[+] Open port: " + str(port) + "\t" + service + "\n")
                     ports.append(result)
                 s.close()
             return ports
     except socket.error:
         print(Red + "[-] Couldn't connect to host." + NC)
+        logfile.write("[-] Couldn't connect to host." + "\n")
     except KeyboardInterrupt:
         print(Blue + "[-] Skipping host: " + Bold + host + NC)
+        logfile.write("[-] Skipping host: " + host + "\n")
         return 0
 
 def portscan_host(hosts):
     print("")
     for host in hosts:
         print(Green + "[+] Port scan started for host: " + Bold +  host + NC)
+        logfile.write("[+] Port scan started for host: " + host + "\n")
         ports = discover_port(host)
         #print_ports(host, ports)
 
 #parse arguments passed by user
 options = get_arguments()
 show_argumets()
+#open log file
+if not os.path.exists('logs'):
+    os.makedirs('logs')
+if not os.path.exists('logs/' + options.target.replace('/', '_')):
+    os.makedirs('logs/' + options.target.replace('/', '_'))
+logfile = open("logs/" + options.target.replace('/', '_') + '/' + dt.now().strftime("%d%m%Y_%H%M%S") + '.log', 'a')
 #scan for alive hosts in the range
 host_results = discover_host(options.target)
 if options.verbose:
     print_hosts(host_results)
 #start portscan for each host alive and perform version and service scan
 portscan_host(host_results)
-
+#close log file
+logfile.close()
