@@ -6,6 +6,8 @@ import socket
 import sys
 from datetime import datetime as dt
 import os
+import termios
+import tty
 
 Bold='\033[1m'
 Red='\033[0;31m'
@@ -80,6 +82,8 @@ def show_argumets():
     if not options.output:
         print(Blue + Bold + "Save log: " + NC + "Off")
     print("")
+    print(Yellow + "Press two times " + Bold + "'s'" + NC + Yellow + " to skip host and " + Bold + "'k'" + NC + Yellow + " to finish the scan." + NC)
+    print("")
 
 def print_hosts(hosts):
     for host in hosts:
@@ -105,6 +109,17 @@ def discover_host(ip):
 
     return client_list
 
+def getkey():
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        key = sys.stdin.read(1)
+
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return key
+
 def discover_port(host):
     #gethostname
     target = socket.gethostbyname(host)
@@ -127,15 +142,17 @@ def discover_port(host):
                     logfile.write("\t[+] Open port: " + str(port) + "\t" + service + "\n")
                 ports.append(result)
             s.close()
+            if (getkey() == 'k'):
+                sys.exit(0)
+            elif (getkey() == 's'):
+                print(Blue + "[-] Skipping host: " + Bold + host + NC)
+                if options.output:
+                    logfile.write("[-] Skipping host: " + host + "\n")
+                return 0
         except socket.error:
             print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\tunknown" + NC)
             if options.output:
                 logfile.write("\t[+] Open port: " + str(port) + "\tunknown" + "\n")
-        except KeyboardInterrupt:
-            print(Blue + "[-] Skipping host: " + Bold + host + NC)
-            if options.output:
-                logfile.write("[-] Skipping host: " + host + "\n")
-            return 0
     return ports
 
 def portscan_host(hosts):
