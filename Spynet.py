@@ -51,10 +51,10 @@ def get_arguments():
     parser.add_argument("-v", "--verbose", action="store_true", help="mainly for debugging")
     parser.add_argument("-o", "--output", action="store_true", help="save to log file")
     requiredNamed = parser.add_argument_group('required named arguments')
-    requiredNamed.add_argument("-t", "--target", dest="target", help="networkaddr + submask ( e.g. 192.168.1.0/24)")
+    requiredNamed.add_argument("-t", "--target", dest="target", help="networkaddr ( e.g. 192.168.1.x) or networkaddr + submask ( e.g. 192.168.1.0/24)")
     options = parser.parse_args()
-    #if not options.target:
-    #    parser.error("[-] Please specify a networkaddr with it's subnetmask. --help for more information")
+    if not options.target:
+        parser.error("[-] Please specify a networkaddr or networkaddr with it's subnetmask. --help for more information\n")
     if not options.start_port:
         #print("setting start port to 1")
         options.start_port = 1
