@@ -7,6 +7,8 @@ import sys
 from datetime import datetime as dt
 import os
 
+import difflib
+
 Bold='\033[1m'
 Red='\033[0;31m'
 Green='\033[0;32m'
@@ -39,7 +41,7 @@ print(" \______/ | $$____/  \____  $$|__/  |__/ \_______/   \___/")
 print("          | $$       /$$  | $$")
 print("          | $$      |  $$$$$$/")
 print("          |__/       \______/   ")
-#print("\n\t" + Red + "Made by: " + Bold + "Rival23 " + NC + Red + "and " + Bold + "Requird" + NC)
+print("\n\t" + Red + "Made by: " + Bold + "Rival23 " + NC + Red + "and " + Bold + "Requird" + NC)
 print("")
 print(NC)
 
@@ -50,11 +52,12 @@ def get_arguments():
     parser.add_argument("-d", "--delay", dest="default_timeout", help="default delay for portscan is 0.01. the higher delay, the slower the scan.", type=float)
     parser.add_argument("-v", "--verbose", action="store_true", help="mainly for debugging")
     parser.add_argument("-o", "--output", action="store_true", help="save to log file")
+    parser.add_argument("-c", "--check", action="store_true", help="check differences between scans")
     requiredNamed = parser.add_argument_group('required named arguments')
-    requiredNamed.add_argument("-t", "--target", dest="target", help="networkaddr + submask ( e.g. 192.168.1.0/24)")
+    requiredNamed.add_argument("-t", "--target", dest="target", help="networkaddr ( e.g. 192.168.1.x) or networkaddr + submask ( e.g. 192.168.1.0/24)")
     options = parser.parse_args()
-    #if not options.target:
-    #    parser.error("[-] Please specify a networkaddr with it's subnetmask. --help for more information")
+    if not options.target:
+        parser.error("[-] Please specify a networkaddr or networkaddr with it's subnetmask. --help for more information\n")
     if not options.start_port:
         #print("setting start port to 1")
         options.start_port = 1
@@ -80,7 +83,10 @@ def show_argumets():
         print(Blue + Bold + "Save log: " + NC + "On")
     if not options.output:
         print(Blue + Bold + "Save log: " + NC + "Off")
-    print("")
+    if options.check:
+        print(Blue + Bold + "Check scans: " + NC + "On")
+    if not options.check:
+        print(Blue + Bold + "Check scans: " + NC + "Off")
 
 def print_hosts(hosts):
     for host in hosts:
@@ -169,6 +175,37 @@ def portscan_host(hosts):
         ports = discover_port(host)
         #print_ports(host, ports)
 
+def check_scans():
+    path = "logs/" + options.target.replace('/', '_') + '/'
+    if not os.path.exists(path):
+        print ("\nThere are no previous scans.\n")
+    elif os.path.exists(path):
+        os.chdir(path)
+        files = sorted(os.listdir(os.getcwd()), key=os.path.getmtime)
+
+        actual_log = files[-1]
+        last_log = files[-2]
+
+        with open(actual_log, 'r') as file1:
+            with open(last_log, 'r') as file2:
+                diff = difflib.unified_diff(file1.readlines(), file2.readlines(), fromfile='file1', tofile='file2', lineterm='', n=0)
+                lines = list(diff)[2:]
+                added = [line[1:] for line in lines if line[0] == '+']
+                removed = [line[1:] for line in lines if line[0] == '-']
+                if added or removed:
+                    print ("\nChecking differences between scans:")
+                if added:
+                    print ('\n\tNew:')
+                    for line in added:
+                        print ('\t' + line)
+                if removed:
+                    print ('\n\tMissing')
+                    for line in removed:
+                        print ('\t' + line)
+                if not added and not removed:
+                    print ("\nThere is nothing different.\n")
+
+
 #parse arguments passed by user
 options = get_arguments()
 show_argumets()
@@ -188,3 +225,7 @@ portscan_host(host_results)
 #close log file
 if options.output:
     logfile.close()
+
+#Check differences between scans
+if options.check:
+    check_scans()
