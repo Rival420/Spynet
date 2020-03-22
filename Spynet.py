@@ -87,7 +87,6 @@ def show_argumets():
         print(Blue + Bold + "Check scans: " + NC + "On")
     if not options.check:
         print(Blue + Bold + "Check scans: " + NC + "Off")
-    print("")
 
 def print_hosts(hosts):
     for host in hosts:
