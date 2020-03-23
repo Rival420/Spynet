@@ -41,7 +41,7 @@ print(" \______/ | $$____/  \____  $$|__/  |__/ \_______/   \___/")
 print("          | $$       /$$  | $$")
 print("          | $$      |  $$$$$$/")
 print("          |__/       \______/   ")
-print("\n\t" + Red + "Made by: " + Bold + "Rival23 " + NC + Red + "and " + Bold + "Requird" + NC)
+#print("\n\t" + Red + "Made by: " + Bold + "Rival23 " + NC + Red + "and " + Bold + "Requird" + NC)
 print("")
 print(NC)
 
@@ -59,13 +59,10 @@ def get_arguments():
     if not options.target:
         parser.error("[-] Please specify a networkaddr or networkaddr with it's subnetmask. --help for more information\n")
     if not options.start_port:
-        #print("setting start port to 1")
         options.start_port = 1
     if not options.end_port:
         options.end_port = 1024
-        #print("setting end port to " + str(options.end_port))
     if not options.default_timeout:
-        #print("setting timeout to 0.01")
         options.default_timeout = 0.5
 
     return options
@@ -205,7 +202,7 @@ def check_scans():
                 if not added and not removed:
                     print ("\nThere is nothing different.\n")
 
-
+#MAIN CODE
 #parse arguments passed by user
 options = get_arguments()
 show_argumets()
@@ -217,11 +214,15 @@ if options.output:
         os.makedirs('logs/' + options.target.replace('/', '_'))
     logfile = open("logs/" + options.target.replace('/', '_') + '/' + dt.now().strftime("%d%m%Y_%H%M%S") + '.log', 'a')
 #scan for alive hosts in the range
+Start_Time = dt.now()
 host_results = discover_host(options.target)
 if options.verbose:
     print_hosts(host_results)
 #start portscan for each host alive and perform version and service scan
 portscan_host(host_results)
+print(Blue)
+print("[*] The script took {0} seconds to scan".format(dt.now() - Start_Time))
+print(NC)
 #close log file
 if options.output:
     logfile.close()
