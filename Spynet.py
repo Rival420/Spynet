@@ -6,6 +6,7 @@ import socket
 import sys
 from datetime import datetime as dt
 import os
+import difflib
 
 import difflib
 
@@ -22,7 +23,10 @@ NC='\033[0m' # No Color
 #end_port=65535
 #defaulttimeout=0.01
 
-os.system("clear")
+if not os.name == 'nt':
+    os.system("clear")
+else:
+    os.system("cls")
 
 if (sys.version_info < (3, 0)):
 	print("[-] Please, run it with Python3")
@@ -201,7 +205,7 @@ def check_scans():
                         print ('\t' + line)
                 if not added and not removed:
                     print ("\nThere is nothing different.\n")
-
+                    
 #MAIN CODE
 #parse arguments passed by user
 options = get_arguments()
@@ -220,9 +224,11 @@ if options.verbose:
     print_hosts(host_results)
 #start portscan for each host alive and perform version and service scan
 portscan_host(host_results)
+
 print(Blue)
 print("[*] The script took {0} seconds to scan".format(dt.now() - Start_Time))
 print(NC)
+
 #close log file
 if options.output:
     logfile.close()
