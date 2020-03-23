@@ -6,7 +6,6 @@ import socket
 import sys
 from datetime import datetime as dt
 import os
-
 import difflib
 
 Bold='\033[1m'
@@ -22,7 +21,10 @@ NC='\033[0m' # No Color
 #end_port=65535
 #defaulttimeout=0.01
 
-os.system("clear")
+if not os.name == 'nt':
+    os.system("clear")
+else:
+    os.system("cls")
 
 if (sys.version_info < (3, 0)):
 	print("[-] Please, run it with Python3")
