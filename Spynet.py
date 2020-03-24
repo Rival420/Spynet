@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 
-import argparse
-import scapy.all as scapy
-import socket
-import sys
+import argparse, socket, sys, os, difflib
+try:
+	import scapy.all as scapy
+except ImportError:
+	sys.exit("\033[0;31m\033[1mYou need scapy!\033[0m\033[0;31m You can instal it with '\033[0;31m\033[1msudo pip3 install scapy\033[0m\033[0;31m' or dowload it from '\033[0;31m\033[1mhttps://github.com/secdev/scapy\033[0m\033[0;31m'\033[0m")
 from datetime import datetime as dt
-import os
-import difflib
-
-import difflib
 
 Bold='\033[1m'
 Red='\033[0;31m'
@@ -154,7 +151,7 @@ def discover_port(host):
 				sys.exit(0)
 			else:
 				print(Red + "[!] Unrecognized option." + NC)
-	return ports
+	#return ports
 
 def portscan_host(hosts):
 	print("")
@@ -162,7 +159,8 @@ def portscan_host(hosts):
 		print(Green + "[+] Port scan started for host: " + Bold +  host + NC)
 		if options.output:
 			logfile.write("[+] Port scan started for host: " + host + "\n")
-		ports = discover_port(host)
+		discover_port(host)
+		#ports = discover_port(host)
 		#print_ports(host, ports)
 
 def check_scans():
