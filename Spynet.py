@@ -24,9 +24,9 @@ NC='\033[0m' # No Color
 #defaulttimeout=0.01
 
 if not os.name == 'nt':
-    os.system("clear")
+	os.system("clear")
 else:
-    os.system("cls")
+	os.system("cls")
 
 if (sys.version_info < (3, 0)):
 	print("[-] Please, run it with Python3")
@@ -50,178 +50,167 @@ print("")
 print(NC)
 
 def get_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--first-port", dest="start_port", help="first port for portscan", type=int)
-    parser.add_argument("-l", "--last-port", dest="end_port", help="last port for portscan", type=int)
-    parser.add_argument("-d", "--delay", dest="default_timeout", help="default delay for portscan is 0.01. the higher delay, the slower the scan.", type=float)
-    parser.add_argument("-v", "--verbose", action="store_true", help="mainly for debugging")
-    parser.add_argument("-o", "--output", action="store_true", help="save to log file")
-    parser.add_argument("-c", "--check", action="store_true", help="check differences between scans")
-    requiredNamed = parser.add_argument_group('required named arguments')
-    requiredNamed.add_argument("-t", "--target", dest="target", help="networkaddr ( e.g. 192.168.1.x) or networkaddr + submask ( e.g. 192.168.1.0/24)")
-    options = parser.parse_args()
-    if not options.target:
-        parser.error("[-] Please specify a networkaddr or networkaddr with it's subnetmask. --help for more information\n")
-    if not options.start_port:
-        options.start_port = 1
-    if not options.end_port:
-        options.end_port = 1024
-    if not options.default_timeout:
-        options.default_timeout = 0.5
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-f", "--first-port", dest="start_port", help="first port for portscan", type=int)
+	parser.add_argument("-l", "--last-port", dest="end_port", help="last port for portscan", type=int)
+	parser.add_argument("-d", "--delay", dest="default_timeout", help="default delay for portscan is 0.01. the higher delay, the slower the scan.", type=float)
+	parser.add_argument("-v", "--verbose", action="store_true", help="mainly for debugging")
+	parser.add_argument("-o", "--output", action="store_true", help="save to log file")
+	parser.add_argument("-c", "--check", action="store_true", help="check differences between scans")
+	requiredNamed = parser.add_argument_group('required named arguments')
+	requiredNamed.add_argument("-t", "--target", dest="target", help="networkaddr ( e.g. 192.168.1.x) or networkaddr + submask ( e.g. 192.168.1.0/24)")
+	options = parser.parse_args()
+	if not options.target:
+		parser.error("[-] Please specify a networkaddr or networkaddr with it's subnetmask. --help for more information\n")
+	if not options.start_port:
+		options.start_port = 1
+	if not options.end_port:
+		options.end_port = 1024
+	if not options.default_timeout:
+		options.default_timeout = 0.5
 
-    return options
+	return options
 
 def show_argumets():
-    print(Blue + Bold + "Target: " + NC + options.target)
-    print(Blue + Bold + "First Port: " + NC + str(options.start_port))
-    print(Blue + Bold + "Last Port: " + NC + str(options.end_port))
-    print(Blue + Bold + "Delay: " + NC + str(options.default_timeout))
-    if options.verbose:
-        print(Blue + Bold + "Verbosity: " + NC + "On")
-    if not options.verbose:
-        print(Blue + Bold + "Verbosity: " + NC + "Off")
-    if options.output:
-        print(Blue + Bold + "Save log: " + NC + "On")
-    if not options.output:
-        print(Blue + Bold + "Save log: " + NC + "Off")
-    if options.check:
-        print(Blue + Bold + "Check scans: " + NC + "On")
-    if not options.check:
-        print(Blue + Bold + "Check scans: " + NC + "Off")
+	print(Blue + Bold + "Target: " + NC + options.target)
+	print(Blue + Bold + "First Port: " + NC + str(options.start_port))
+	print(Blue + Bold + "Last Port: " + NC + str(options.end_port))
+	print(Blue + Bold + "Delay: " + NC + str(options.default_timeout))
+	if options.verbose:
+		print(Blue + Bold + "Verbosity: " + NC + "On")
+	if not options.verbose:
+		print(Blue + Bold + "Verbosity: " + NC + "Off")
+	if options.output:
+		print(Blue + Bold + "Save log: " + NC + "On")
+	if not options.output:
+		print(Blue + Bold + "Save log: " + NC + "Off")
+	if options.check:
+		print(Blue + Bold + "Check scans: " + NC + "On")
+	if not options.check:
+		print(Blue + Bold + "Check scans: " + NC + "Off")
 
 def print_hosts(hosts):
-    for host in hosts:
-        print("[+] Host: " + host)
+	for host in hosts:
+		print("[+] Host: " + host)
 
 def print_ports(host, ports):
-    print("[+] Host: " + host)
-    for port in ports:
-        print("\t[+] Open port: " + str(port))
+	print("[+] Host: " + host)
+	for port in ports:
+		print("\t[+] Open port: " + str(port))
 
 def discover_host(ip):
-    arp_request = scapy.ARP(pdst=ip)
-    broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
-    arp_request_broadcast = broadcast/arp_request
-    answered_list = scapy.srp(arp_request_broadcast, timeout=1, verbose=False)[0]
+	arp_request = scapy.ARP(pdst=ip)
+	broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
+	arp_request_broadcast = broadcast/arp_request
+	answered_list = scapy.srp(arp_request_broadcast, timeout=1, verbose=False)[0]
 
-    client_list = []
-    for answer in answered_list:
-        client_ip = answer[1].psrc
-        client_ip = str(client_ip)
-        #print(client_ip)
-        client_list.append(client_ip)
+	client_list = []
+	for answer in answered_list:
+		client_ip = answer[1].psrc
+		client_ip = str(client_ip)
+		#print(client_ip)
+		client_list.append(client_ip)
 
-    return client_list
-
-def getkey():
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    try:
-        tty.setraw(sys.stdin.fileno())
-        ch = sys.stdin.read(1)
-
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    return ch
+	return client_list
 
 def discover_port(host):
-    #gethostname
-    target = socket.gethostbyname(host)
-    ports = []
-    for port in range(options.start_port, options.end_port):
-        try:
-            if options.verbose:
-                print(Blue + str(port), end='\r')
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            socket.setdefaulttimeout(options.default_timeout)
-            result = s.connect_ex((target, port))
-            if result == 0:
-                if options.verbose:
-                    sys.stdout.write("\033[K")
-                protocolname = 'tcp'
-                service = socket.getservbyport(port, protocolname)
-                print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\t" + service + NC)
-                if options.output:
-                    logfile.write("\t[+] Open port: " + str(port) + "\t" + service + "\n")
-                ports.append(result)
-            s.close()
-        except socket.error:
-            print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\tunknown" + NC)
-            if options.output:
-                logfile.write("\t[+] Open port: " + str(port) + "\tunknown" + "\n")
-        except KeyboardInterrupt:
-            action = input("\r" + Pink + "[!] Press " + Bold + "'s'" + NC + Pink + " to skip host or " + Bold + "'k'" + NC + Pink + " to finish the script: ")
-            if (action == 's'):
-                print(Blue + "[-] Skipping host: " + Bold + host + NC)
-                if options.output:
-                    logfile.write("[-] Skipping host: " + host + "\n")
-                return 0
-            elif (action == 'k'):
-                print(Red + "[!] Exiting." + NC)
-                print("")
-                if options.output:
-                    logfile.write("[!] Exiting.\n")
-                    logfile.close()
-                sys.exit(0)
-            else:
-                print(Red + "[!] Unrecognized option." + NC)
-    return ports
+	#gethostname
+	target = socket.gethostbyname(host)
+	ports = []
+	for port in range(options.start_port, options.end_port):
+		try:
+			if options.verbose:
+				print(Blue + str(port), end='\r')
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			socket.setdefaulttimeout(options.default_timeout)
+			result = s.connect_ex((target, port))
+			if result == 0:
+				if options.verbose:
+					sys.stdout.write("\033[K")
+				protocolname = 'tcp'
+				service = socket.getservbyport(port, protocolname)
+				print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\t" + service + NC)
+				if options.output:
+					logfile.write("\t[+] Open port: " + str(port) + "\t" + service + "\n")
+				ports.append(result)
+			s.close()
+		except socket.error:
+			print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\tunknown" + NC)
+			if options.output:
+				logfile.write("\t[+] Open port: " + str(port) + "\tunknown" + "\n")
+		except KeyboardInterrupt:
+			action = input("\r" + Pink + "[!] Press " + Bold + "'s'" + NC + Pink + " to skip host or " + Bold + "'k'" + NC + Pink + " to finish the script: ")
+			if (action == 's'):
+				print(Blue + "[-] Skipping host: " + Bold + host + NC)
+				if options.output:
+					logfile.write("[-] Skipping host: " + host + "\n")
+				return 0
+			elif (action == 'k'):
+				print(Red + "[!] Exiting." + NC)
+				print("")
+				if options.output:
+					logfile.write("[!] Exiting.\n")
+					logfile.close()
+				sys.exit(0)
+			else:
+				print(Red + "[!] Unrecognized option." + NC)
+	return ports
 
 def portscan_host(hosts):
-    print("")
-    for host in hosts:
-        print(Green + "[+] Port scan started for host: " + Bold +  host + NC)
-        if options.output:
-            logfile.write("[+] Port scan started for host: " + host + "\n")
-        ports = discover_port(host)
-        #print_ports(host, ports)
+	print("")
+	for host in hosts:
+		print(Green + "[+] Port scan started for host: " + Bold +  host + NC)
+		if options.output:
+			logfile.write("[+] Port scan started for host: " + host + "\n")
+		ports = discover_port(host)
+		#print_ports(host, ports)
 
 def check_scans():
-    path = "logs/" + options.target.replace('/', '_') + '/'
-    if not os.path.exists(path):
-        print ("\nThere are no previous scans.\n")
-    elif os.path.exists(path):
-        os.chdir(path)
-        files = sorted(os.listdir(os.getcwd()), key=os.path.getmtime)
+	path = "logs/" + options.target.replace('/', '_') + '/'
+	if not os.path.exists(path):
+		print ("\nThere are no previous scans.\n")
+	elif os.path.exists(path):
+		os.chdir(path)
+		files = sorted(os.listdir(os.getcwd()), key=os.path.getmtime)
 
-        actual_log = files[-1]
-        last_log = files[-2]
+		actual_log = files[-1]
+		last_log = files[-2]
 
-        with open(actual_log, 'r') as file1:
-            with open(last_log, 'r') as file2:
-                diff = difflib.unified_diff(file1.readlines(), file2.readlines(), fromfile='file1', tofile='file2', lineterm='', n=0)
-                lines = list(diff)[2:]
-                added = [line[1:] for line in lines if line[0] == '+']
-                removed = [line[1:] for line in lines if line[0] == '-']
-                if added or removed:
-                    print ("\nChecking differences between scans:")
-                if added:
-                    print ('\n\tNew:')
-                    for line in added:
-                        print ('\t' + line)
-                if removed:
-                    print ('\n\tMissing')
-                    for line in removed:
-                        print ('\t' + line)
-                if not added and not removed:
-                    print ("\nThere is nothing different.\n")
-                    
+		with open(actual_log, 'r') as file1:
+			with open(last_log, 'r') as file2:
+				diff = difflib.unified_diff(file1.readlines(), file2.readlines(), fromfile='file1', tofile='file2', lineterm='', n=0)
+				lines = list(diff)[2:]
+				added = [line[1:] for line in lines if line[0] == '+']
+				removed = [line[1:] for line in lines if line[0] == '-']
+				if added or removed:
+					print ("\nChecking differences between scans:")
+				if added:
+					print ('\n\tNew:')
+					for line in added:
+						print ('\t' + line)
+				if removed:
+					print ('\n\tMissing')
+					for line in removed:
+						print ('\t' + line)
+				if not added and not removed:
+					print ("\nThere is nothing different.\n")
+
 #MAIN CODE
 #parse arguments passed by user
 options = get_arguments()
 show_argumets()
 #open log file
 if options.output:
-    if not os.path.exists('logs'):
-        os.makedirs('logs')
-    if not os.path.exists('logs/' + options.target.replace('/', '_')):
-        os.makedirs('logs/' + options.target.replace('/', '_'))
-    logfile = open("logs/" + options.target.replace('/', '_') + '/' + dt.now().strftime("%d%m%Y_%H%M%S") + '.log', 'a')
+	if not os.path.exists('logs'):
+		os.makedirs('logs')
+	if not os.path.exists('logs/' + options.target.replace('/', '_')):
+		os.makedirs('logs/' + options.target.replace('/', '_'))
+	logfile = open("logs/" + options.target.replace('/', '_') + '/' + dt.now().strftime("%d%m%Y_%H%M%S") + '.log', 'a')
 #scan for alive hosts in the range
 Start_Time = dt.now()
 host_results = discover_host(options.target)
 if options.verbose:
-    print_hosts(host_results)
+	print_hosts(host_results)
 #start portscan for each host alive and perform version and service scan
 portscan_host(host_results)
 
@@ -231,8 +220,8 @@ print(NC)
 
 #close log file
 if options.output:
-    logfile.close()
+	logfile.close()
 
 #Check differences between scans
 if options.check:
-    check_scans()
+	check_scans()
