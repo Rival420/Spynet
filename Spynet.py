@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import argparse, socket, sys, os, difflib
+import argparse, socket, sys, os, difflib, shutil
 try:
 	import scapy.all as scapy
 except ImportError:
@@ -105,110 +105,128 @@ def discover_host(ip):
 	for answer in answered_list:
 		client_ip = answer[1].psrc
 		client_ip = str(client_ip)
-		#print(client_ip)
 		client_list.append(client_ip)
 
 	return client_list
 
-def discover_port(host):
-	#gethostname
-	target = socket.gethostbyname(host)
-	ports = []
-	for port in range(options.start_port, options.end_port):
-		try:
-			if options.verbose:
-				print(Blue + str(port), end='\r')
-			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			socket.setdefaulttimeout(options.default_timeout)
-			result = s.connect_ex((target, port))
-			if result == 0:
-				if options.verbose:
-					sys.stdout.write("\033[K")
-				protocolname = 'tcp'
-				service = socket.getservbyport(port, protocolname)
-				print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\t" + service + NC)
-				if options.output:
-					logfile.write("\t[+] Open port: " + str(port) + "\t" + service + "\n")
-				ports.append(result)
-			s.close()
-		except socket.error:
-			print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\tunknown" + NC)
-			if options.output:
-				logfile.write("\t[+] Open port: " + str(port) + "\tunknown" + "\n")
-		except KeyboardInterrupt:
-			action = input("\r" + Pink + "[!] Press " + Bold + "'s'" + NC + Pink + " to skip host or " + Bold + "'k'" + NC + Pink + " to finish the script: ")
-			if (action == 's'):
-				print(Blue + "[-] Skipping host: " + Bold + host + NC)
-				if options.output:
-					logfile.write("[-] Skipping host: " + host + "\n")
-				return 0
-			elif (action == 'k'):
-				print(Red + "[!] Exiting." + NC)
-				print("")
-				if options.output:
-					logfile.write("[!] Exiting.\n")
-					logfile.close()
-				sys.exit(0)
-			else:
-				print(Red + "[!] Unrecognized option." + NC)
-	#return ports
-
 def portscan_host(hosts):
 	print("")
+	#prepare log files
+	if os.path.exists('tmp'):
+		shutil.rmtree('tmp', ignore_errors=True)
 	for host in hosts:
+		if not os.path.exists('tmp'):
+			os.makedirs('tmp')
+		tmpfile = open("tmp/" + host + '.log', 'a')
+		if options.output:
+			logfile = open("logs/" + host + '/' + dt.now().strftime("%d%m%Y_%H%M%S") + '.log', 'a')
 		print(Green + "[+] Port scan started for host: " + Bold +  host + NC)
+		tmpfile.write("[+] Port scan started for host: " + host + "\n")
 		if options.output:
 			logfile.write("[+] Port scan started for host: " + host + "\n")
-		discover_port(host)
-		#ports = discover_port(host)
-		#print_ports(host, ports)
+	#gethostname
+		target = socket.gethostbyname(host)
+		ports = []
+		for port in range(options.start_port, options.end_port):
+			try:
+				if options.verbose:
+					print(Blue + str(port), end='\r')
+				s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+				socket.setdefaulttimeout(options.default_timeout)
+				result = s.connect_ex((target, port))
+				if result == 0:
+					if options.verbose:
+						sys.stdout.write("\033[K")
+					protocolname = 'tcp'
+					service = socket.getservbyport(port, protocolname)
+					print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\t" + service + NC)
+					tmpfile.write("\t[+] Open port: " + str(port) + "\t" + service + "\n")
+					if options.output:
+						logfile.write("\t[+] Open port: " + str(port) + "\t" + service + "\n")
+					ports.append(result)
+				s.close()
+			except socket.error:
+				print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\tunknown" + NC)
+				tmpfile.write("\t[+] Open port: " + str(port) + "\tunknown" + "\n")
+				if options.output:
+					logfile.write("\t[+] Open port: " + str(port) + "\tunknown" + "\n")
+			except KeyboardInterrupt:
+				action = input("\r" + Pink + "[!] Press " + Bold + "'s'" + NC + Pink + " to skip host or " + Bold + "'k'" + NC + Pink + " to finish the script: ")
+				if (action == 's'):
+					print(Blue + "[-] Skipping host: " + Bold + host + NC)
+					tmpfile.write("[-] Skipping host: " + host + "\n")
+					if options.output:
+						logfile.write("[-] Skipping host: " + host + "\n")
+					return 0
+				elif (action == 'k'):
+					print(Red + "[!] Exiting." + NC)
+					print("")
+					tmpfile.write("[!] Exiting.\n")
+					if options.output:
+						logfile.write("[!] Exiting.\n")
+						logfile.close()
+					sys.exit(0)
+				else:
+					print(Red + "[!] Unrecognized option." + NC)
+		#close log file
+		if options.output:
+			logfile.close()
+	#return ports
 
-def check_scans():
-	path = "logs/" + options.target.replace('/', '_') + '/'
-	if not os.path.exists(path):
-		print ("\nThere are no previous scans.\n")
-	elif os.path.exists(path):
-		os.chdir(path)
-		files = sorted(os.listdir(os.getcwd()), key=os.path.getmtime)
+def check_scans(hosts):
+	if not os.path.exists('logs'):
+		print ("\t[!] There are no previous scans.\n")
+		shutil.rmtree('tmp', ignore_errors=True)
+		return (0)
+	for host in hosts:
+		tmppath = "tmp/"
+		path = "logs/" + host + '/'
+		if not os.path.exists(path):
+			print ("\n\t[!] There are no previous scans for " + host + ".\n")
+		elif os.path.exists(path):
+			os.chdir(path)
+			files = sorted(os.listdir(os.getcwd()), key=os.path.getmtime)
 
-		actual_log = files[-1]
-		last_log = files[-2]
+			last_log = files[-1]
+			actual_log = tmppath + host + '.log'
 
-		with open(actual_log, 'r') as file1:
-			with open(last_log, 'r') as file2:
-				diff = difflib.unified_diff(file1.readlines(), file2.readlines(), fromfile='file1', tofile='file2', lineterm='', n=0)
-				lines = list(diff)[2:]
-				added = [line[1:] for line in lines if line[0] == '+']
-				removed = [line[1:] for line in lines if line[0] == '-']
-				if added or removed:
-					print ("\nChecking differences between scans:")
-				if added:
-					print ('\n\tNew:')
-					for line in added:
-						print ('\t' + line)
-				if removed:
-					print ('\n\tMissing')
-					for line in removed:
-						print ('\t' + line)
-				if not added and not removed:
-					print ("\nThere is nothing different.\n")
+			with open(actual_log, 'r') as file1:
+				with open(last_log, 'r') as file2:
+					diff = difflib.unified_diff(file1.readlines(), file2.readlines(), fromfile='file1', tofile='file2', lineterm='', n=0)
+					lines = list(diff)[2:]
+					title = [line[1:] for line in lines if line[0] == '+']
+					added = [line[1:] for line in lines if line[0] == '+']
+					removed = [line[1:] for line in lines if line[0] == '-']
+					#if added or removed:
+					print ("\nChecking differences for host " + host + ":")
+					if added:
+						print ('\n\tNew:')
+						for line in added:
+							print ('\t' + line)
+					if removed:
+						print ('\n\tMissing')
+						for line in removed:
+							print ('\t' + line)
+					if not added and not removed:
+						print ("\n\t[!] There is nothing different.\n")
+	shutil.rmtree('tmp', ignore_errors=True)
 
 #MAIN CODE
 #parse arguments passed by user
 options = get_arguments()
 show_argumets()
-#open log file
-if options.output:
-	if not os.path.exists('logs'):
-		os.makedirs('logs')
-	if not os.path.exists('logs/' + options.target.replace('/', '_')):
-		os.makedirs('logs/' + options.target.replace('/', '_'))
-	logfile = open("logs/" + options.target.replace('/', '_') + '/' + dt.now().strftime("%d%m%Y_%H%M%S") + '.log', 'a')
 #scan for alive hosts in the range
 Start_Time = dt.now()
 host_results = discover_host(options.target)
 if options.verbose:
 	print_hosts(host_results)
+#open log file
+if options.output:
+	if not os.path.exists('logs'):
+		os.makedirs('logs')
+	for host in host_results:
+		if not os.path.exists('logs/' + host):
+			os.makedirs('logs/' + host)
 #start portscan for each host alive and perform version and service scan
 portscan_host(host_results)
 
@@ -216,10 +234,6 @@ print(Blue)
 print("[*] The script took {0} seconds to scan".format(dt.now() - Start_Time))
 print(NC)
 
-#close log file
-if options.output:
-	logfile.close()
-
 #Check differences between scans
 if options.check:
-	check_scans()
+	check_scans(host_results)
