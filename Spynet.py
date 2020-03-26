@@ -179,7 +179,6 @@ def portscan_host(hosts):
 		#close log file
 		if options.output:
 			logfile.close()
-	#return ports
 
 def check_scans(hosts):
 	if not os.path.exists('logs'):
@@ -222,29 +221,32 @@ def check_scans(hosts):
 						print ("\n\t" + Green + Bold + "[!] There is nothing different." + NC + "\n")
 	shutil.rmtree('tmp', ignore_errors=True)
 
-#MAIN CODE
-#parse arguments passed by user
-options = get_arguments()
-show_argumets()
-#scan for alive hosts in the range
-Start_Time = dt.now()
-host_results = discover_host(options.target)
-if options.verbose:
-	print_hosts(host_results)
-#open log file
-if options.output:
-	if not os.path.exists('logs'):
-		os.makedirs('logs')
-	for host in host_results:
-		if not os.path.exists('logs/' + host):
-			os.makedirs('logs/' + host)
-#start portscan for each host alive and perform version and service scan
-portscan_host(host_results)
+def main(options):
+    #parse arguments passed by user
+	show_argumets()
+	#scan for alive hosts in the range
+	Start_Time = dt.now()
+	host_results = discover_host(options.target)
+	if options.verbose:
+		print_hosts(host_results)
+	#open log file
+	if options.output:
+		if not os.path.exists('logs'):
+			os.makedirs('logs')
+		for host in host_results:
+			if not os.path.exists('logs/' + host):
+				os.makedirs('logs/' + host)
+	#start portscan for each host alive and perform version and service scan
+	portscan_host(host_results)
 
-print(Blue)
-print("[*] The script took {0} seconds to scan".format(dt.now() - Start_Time))
-print(NC)
+	print(Blue)
+	print("[*] The script took {0} seconds to scan".format(dt.now() - Start_Time))
+	print(NC)
 
-#Check differences between scans
-if options.check:
-	check_scans(host_results)
+	#Check differences between scans
+	if options.check:
+		check_scans(host_results)
+
+if __name__== "__main__":
+	options = get_arguments()
+	main(options)
