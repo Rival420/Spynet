@@ -58,24 +58,23 @@ def get_arguments():
 	parser.add_argument("--clean", action="store_true", help="clean log files")
 	requiredNamed = parser.add_argument_group('required named arguments')
 	requiredNamed.add_argument("-t", "--target", dest="target", help="networkhost ( e.g. 192.168.1.x) or networkhost + submask ( e.g. 192.168.1.0/24)")
-	options2 = parser.parse_args()
-	if not options2.target and not options2.clean:
+	args = parser.parse_args()
+	if not args.target and not args.clean:
 		parser.error("[-] Please specify a networkhost or networkhost with it's subnetmask. --help for more information\n")
-	if not options2.start_port:
-		options2.start_port = 1
-	if not options2.end_port:
-		options2.end_port = 1024
-	if not options2.default_timeout:
-		options2.default_timeout = 0.5
-	if options2.clean:
+	if not args.start_port:
+		args.start_port = 1
+	if not args.end_port:
+		args.end_port = 1024
+	if not args.default_timeout:
+		args.default_timeout = 0.5
+	if args.clean:
 		print(Blue + Bold + "[!] Cleaning previous log files..." + NC)
 		shutil.rmtree('tmp', ignore_errors=True)
 		shutil.rmtree('logs', ignore_errors=True)
 		print(Blue + Bold + "[!] Clean." + NC + '\n')
-		if not options2.target:
+		if not args.target:
 			sys.exit(0)
-
-	return options2
+	return args
 
 def show_arguments():
 	print(Blue + Bold + "Target: " + NC + options.target)
@@ -103,17 +102,13 @@ def check_input(host):
 	action = input("\r" + Pink + "[!] Press " + Bold + "'s'" + NC + Pink + " to skip host or " + Bold + "'k'" + NC + Pink + " to finish the script: ")
 	if action == 's':
 		print(Blue + "[-] Skipping host: " + Bold + host + NC)
-		tmpfile.write("[-] Skipping host: " + host + "\n")
-		if options.output:
-			logfile.write("[-] Skipping host: " + host + "\n")
+		write_log(host, "[-] Skipping host: " + host + "\n")
 		return 0
 	elif action == 'k':
 		print(Red + "[!] Exiting." + NC)
 		print("")
-		tmpfile.write("[!] Exiting.\n")
-		if options.output:
-			logfile.write("[!] Exiting.\n")
-			logfile.close()
+		write_log(host, "[!] Exiting.\n")
+		shutil.rmtree('tmp', ignore_errors=True)
 		sys.exit(0)
 	else:
 		print(Red + "[!] Unrecognized option." + NC)
@@ -173,6 +168,14 @@ def get_banner(s, host, port):
 		check_input(host)
 	return ""
 
+def write_log(host, msg):
+	tmpfile = open("tmp/" + host + '.log', 'a')
+	if options.output:
+		logfile = open("logs/" + host + '/' + actual_time + '.log', 'a')
+	tmpfile.write(msg)
+	if options.output:
+		logfile.write(msg)
+
 def portscan_host(hosts):
 	print("")
 	#prepare log files
@@ -181,13 +184,8 @@ def portscan_host(hosts):
 	for host in hosts:
 		if not os.path.exists('tmp'):
 			os.makedirs('tmp')
-		tmpfile = open("tmp/" + host + '.log', 'a')
-		if options.output:
-			logfile = open("logs/" + host + '/' + dt.now().strftime("%d%m%Y_%H%M%S") + '.log', 'a')
 		print(Green + "[+] Port scan started for host: " + Bold +  host + NC)
-		tmpfile.write("[+] Port scan started for host: " + host + "\n")
-		if options.output:
-			logfile.write("[+] Port scan started for host: " + host + "\n")
+		write_log(host, "[+] Port scan started for host: " + host + "\n")
 	#gethostname
 		target = socket.gethostbyname(host)
 		ports = []
@@ -213,21 +211,15 @@ def portscan_host(hosts):
 					service = socket.getservbyport(port, protocolname)
 
 					print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\t" + service + "\t\t" + banner + NC)
-					tmpfile.write("\t[+] Open port: " + str(port) + "\t" + service + "\t\t" + banner + "\n")
-					if options.output:
-						logfile.write("\t[+] Open port: " + str(port) + "\t" + service + "\t\t" + banner + "\n")
+					write_log(host, "\t[+] Open port: " + str(port) + "\t" + service + "\t\t" + banner + "\n")
 					ports.append(result)
 				s.close()
 			except socket.error:
 				print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\tunknown" + "\t\t" + banner + NC)
-				tmpfile.write("\t[+] Open port: " + str(port) + "\tunknown" + "\t\t" + banner + "\n")
-				if options.output:
-					logfile.write("\t[+] Open port: " + str(port) + "\tunknown" + "\t\t" + banner + "\n")
+				write_log(host, "\t[+] Open port: " + str(port) + "\tunknown" + "\t\t" + banner + "\n")
 			except KeyboardInterrupt:
 				check_input(host)
-		#close log file
-		if options.output:
-			logfile.close()
+				break
 
 def check_scans(hosts):
 	if not os.path.exists('logs'):
@@ -297,5 +289,6 @@ def main(options):
 		check_scans(host_results)
 
 if __name__== "__main__":
+	actual_time = dt.now().strftime("%d%m%Y_%H%M%S")
 	options = get_arguments()
 	main(options)
