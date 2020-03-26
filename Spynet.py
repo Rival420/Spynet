@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import argparse, socket, sys, os, difflib, shutil
+import argparse, socket, sys, os, difflib, shutil, http.client, urllib.request as urllib
 try:
 	import scapy.all as scapy
 except ImportError:
@@ -56,10 +56,10 @@ def get_arguments():
 	parser.add_argument("-c", "--check", action="store_true", help="check differences between scans")
 	parser.add_argument("--clean", action="store_true", help="clean log files")
 	requiredNamed = parser.add_argument_group('required named arguments')
-	requiredNamed.add_argument("-t", "--target", dest="target", help="networkaddr ( e.g. 192.168.1.x) or networkaddr + submask ( e.g. 192.168.1.0/24)")
+	requiredNamed.add_argument("-t", "--target", dest="target", help="networkhost ( e.g. 192.168.1.x) or networkhost + submask ( e.g. 192.168.1.0/24)")
 	options = parser.parse_args()
 	if not options.target and not options.clean:
-		parser.error("[-] Please specify a networkaddr or networkaddr with it's subnetmask. --help for more information\n")
+		parser.error("[-] Please specify a networkhost or networkhost with it's subnetmask. --help for more information\n")
 	if not options.start_port:
 		options.start_port = 1
 	if not options.end_port:
@@ -117,6 +117,35 @@ def discover_host(ip):
 
 	return client_list
 
+def get_banner(s, host, port):
+	try:
+		conn = http.client.HTTPConnection(host, port)
+		conn.request("GET", "/")
+		conn.getresponse()
+		c = urllib.urlopen("http://"  + host + ":" + str(port))
+		service = str(c.info()['Server'])
+		return service
+	except:
+		pass
+	try:
+		conn = http.client.HTTPSConnection(host, port)
+		conn.request("GET", "/")
+		conn.getresponse()
+		c = urllib.urlopen("https://"  + host + ":" + str(port))
+		service = str(c.info()['Server'])
+		return service
+	except:
+		pass
+	try:
+		socket.setdefaulttimeout(2)
+		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		s.connect((host, port))
+		service = str(s.recv(1024))
+		return service
+	except:
+		pass
+	return ""
+
 def portscan_host(hosts):
 	print("")
 	#prepare log files
@@ -136,12 +165,15 @@ def portscan_host(hosts):
 		target = socket.gethostbyname(host)
 		ports = []
 		for port in range(options.start_port, options.end_port):
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			banner = get_banner(s, target, port)
+			if banner != "" and banner[1] == "'":
+				banner = banner.replace("b'", "").replace("\\n'", "").replace("\\r", "").replace("Server ready.", "")
 			try:
 				if options.verbose:
 					print(Blue + "Scaning port " + str(port) + " in " + target, end='\r')
 					if port == options.end_port - 1:
 						sys.stdout.write("\033[K")
-				s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				socket.setdefaulttimeout(options.default_timeout)
 				result = s.connect_ex((target, port))
 				if result == 0:
@@ -149,17 +181,18 @@ def portscan_host(hosts):
 						sys.stdout.write("\033[K")
 					protocolname = 'tcp'
 					service = socket.getservbyport(port, protocolname)
-					print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\t" + service + NC)
-					tmpfile.write("\t[+] Open port: " + str(port) + "\t" + service + "\n")
+
+					print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\t" + service + "\t\t" + banner + NC)
+					tmpfile.write("\t[+] Open port: " + str(port) + "\t" + service + "\t\t" + banner + "\n")
 					if options.output:
-						logfile.write("\t[+] Open port: " + str(port) + "\t" + service + "\n")
+						logfile.write("\t[+] Open port: " + str(port) + "\t" + service + "\t\t" + banner + "\n")
 					ports.append(result)
 				s.close()
 			except socket.error:
-				print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\tunknown" + NC)
-				tmpfile.write("\t[+] Open port: " + str(port) + "\tunknown" + "\n")
+				print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\tunknown" + "\t\t" + banner + NC)
+				tmpfile.write("\t[+] Open port: " + str(port) + "\tunknown" + "\t\t" + banner + "\n")
 				if options.output:
-					logfile.write("\t[+] Open port: " + str(port) + "\tunknown" + "\n")
+					logfile.write("\t[+] Open port: " + str(port) + "\tunknown" + "\t\t" + banner + "\n")
 			except KeyboardInterrupt:
 				action = input("\r" + Pink + "[!] Press " + Bold + "'s'" + NC + Pink + " to skip host or " + Bold + "'k'" + NC + Pink + " to finish the script: ")
 				if (action == 's'):
@@ -248,6 +281,8 @@ def main(options):
 	#Check differences between scans
 	if options.check:
 		check_scans(host_results)
+
+import http.client
 
 if __name__== "__main__":
 	options = get_arguments()

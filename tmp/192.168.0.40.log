@@ -1,0 +1,15 @@
+[+] Port scan started for host: 192.168.0.40
+	[+] Open port: 21	ftp
+	[+] Open port: 22	ssh
+	[+] Open port: 80	http
+	[+] Open port: 90	unknown
+	[+] Open port: 92	unknown
+	[+] Open port: 94	unknown
+	[+] Open port: 100	unknown
+	[+] Open port: 111	sunrpc
+	[+] Open port: 139	netbios-ssn
+	[+] Open port: 445	microsoft-ds
+	[+] Open port: 661	unknown
+	[+] Open port: 914	unknown
+	[+] Open port: 915	unknown
+	[+] Open port: 943	unknown
