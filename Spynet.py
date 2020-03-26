@@ -138,7 +138,9 @@ def portscan_host(hosts):
 		for port in range(options.start_port, options.end_port):
 			try:
 				if options.verbose:
-					print(Blue + str(port), end='\r')
+					print(Blue + "Scaning port " + str(port) + " in " + target, end='\r')
+					if port == options.end_port - 1:
+						sys.stdout.write("\033[K")
 				s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				socket.setdefaulttimeout(options.default_timeout)
 				result = s.connect_ex((target, port))
