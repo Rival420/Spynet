@@ -145,6 +145,8 @@ def get_banner(s, host, port):
 			c = urllib.urlopen("http://"  + host + ":" + str(port))
 			service = str(c.info()['Server'])
 			return service
+		except KeyboardInterrupt:
+			check_input(host)
 		except:
 			pass
 		try:
@@ -154,6 +156,8 @@ def get_banner(s, host, port):
 			c = urllib.urlopen("https://"  + host + ":" + str(port))
 			service = str(c.info()['Server'])
 			return service
+		except KeyboardInterrupt:
+			check_input(host)
 		except:
 			pass
 		try:
@@ -162,6 +166,8 @@ def get_banner(s, host, port):
 			s.connect((host, port))
 			service = str(s.recv(1024))
 			return service
+		except KeyboardInterrupt:
+			check_input(host)
 		except:
 			pass
 	except KeyboardInterrupt:
