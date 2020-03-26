@@ -54,6 +54,7 @@ def get_arguments():
 	parser.add_argument("-v", "--verbose", action="store_true", help="mainly for debugging")
 	parser.add_argument("-o", "--output", action="store_true", help="save to log file")
 	parser.add_argument("-c", "--check", action="store_true", help="check differences between scans")
+	parser.add_argument("-s", "--service", action="store_true", help="resolve service software")
 	parser.add_argument("--clean", action="store_true", help="clean log files")
 	requiredNamed = parser.add_argument_group('required named arguments')
 	requiredNamed.add_argument("-t", "--target", dest="target", help="networkhost ( e.g. 192.168.1.x) or networkhost + submask ( e.g. 192.168.1.0/24)")
@@ -93,6 +94,10 @@ def show_argumets():
 		print(Blue + Bold + "Check scans: " + NC + "On")
 	if not options.check:
 		print(Blue + Bold + "Check scans: " + NC + "Off")
+	if options.service:
+		print(Blue + Bold + "Resolve service: " + NC + "On")
+	if not options.service:
+		print(Blue + Bold + "Resolve service: " + NC + "Off")
 
 def print_hosts(hosts):
 	for host in hosts:
@@ -166,7 +171,10 @@ def portscan_host(hosts):
 		ports = []
 		for port in range(options.start_port, options.end_port):
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			banner = get_banner(s, target, port)
+			if options.service:
+				banner = get_banner(s, target, port)
+			else:
+				banner = ""
 			if banner != "" and banner[1] == "'":
 				banner = banner.replace("b'", "").replace("\\n'", "").replace("\\r", "").replace("Server ready.", "")
 			try:
