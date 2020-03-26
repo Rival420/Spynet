@@ -54,10 +54,11 @@ def get_arguments():
 	parser.add_argument("-v", "--verbose", action="store_true", help="mainly for debugging")
 	parser.add_argument("-o", "--output", action="store_true", help="save to log file")
 	parser.add_argument("-c", "--check", action="store_true", help="check differences between scans")
+	parser.add_argument("--clean", action="store_true", help="clean log files")
 	requiredNamed = parser.add_argument_group('required named arguments')
 	requiredNamed.add_argument("-t", "--target", dest="target", help="networkaddr ( e.g. 192.168.1.x) or networkaddr + submask ( e.g. 192.168.1.0/24)")
 	options = parser.parse_args()
-	if not options.target:
+	if not options.target and not options.clean:
 		parser.error("[-] Please specify a networkaddr or networkaddr with it's subnetmask. --help for more information\n")
 	if not options.start_port:
 		options.start_port = 1
@@ -65,6 +66,13 @@ def get_arguments():
 		options.end_port = 1024
 	if not options.default_timeout:
 		options.default_timeout = 0.5
+	if options.clean:
+		print(Blue + Bold + "[!] Cleaning previous log files..." + NC)
+		shutil.rmtree('tmp', ignore_errors=True)
+		shutil.rmtree('logs', ignore_errors=True)
+		print(Blue + Bold + "[!] Clean." + NC + '\n')
+		if not options.target:
+			sys.exit(0)
 
 	return options
 
@@ -175,20 +183,23 @@ def portscan_host(hosts):
 
 def check_scans(hosts):
 	if not os.path.exists('logs'):
-		print ("\t[!] There are no previous scans.\n")
+		print ("\t[!] There are no previous scans. Relaunch it adding the '-o' flag.\n")
 		shutil.rmtree('tmp', ignore_errors=True)
 		return (0)
 	for host in hosts:
 		tmppath = "tmp/"
-		path = "logs/" + host + '/'
-		if not os.path.exists(path):
-			print ("\n\t[!] There are no previous scans for " + host + ".\n")
-		elif os.path.exists(path):
-			os.chdir(path)
-			files = sorted(os.listdir(os.getcwd()), key=os.path.getmtime)
+		logs_path = "logs/" + host + '/'
+		original_path = os.getcwd()
 
-			last_log = files[-1]
-			actual_log = tmppath + host + '.log'
+		if not os.path.exists(logs_path):
+			print ("\n\t[!] There are no previous scans for " + host + ".\n")
+		elif os.path.exists(logs_path):
+			os.chdir(logs_path)
+			files = sorted(os.listdir(os.getcwd()), key=os.path.getmtime)
+			os.chdir(original_path)
+
+			last_log = logs_path + files[-1]
+			actual_log = os.path.join(tmppath, host + '.log')
 
 			with open(actual_log, 'r') as file1:
 				with open(last_log, 'r') as file2:
@@ -198,17 +209,17 @@ def check_scans(hosts):
 					added = [line[1:] for line in lines if line[0] == '+']
 					removed = [line[1:] for line in lines if line[0] == '-']
 					#if added or removed:
-					print ("\nChecking differences for host " + host + ":")
+					print (Blue + Bold + "Checking differences for host " + host + ":" + NC)
 					if added:
-						print ('\n\tNew:')
+						print ('\n\t' + Red + Bold + 'Missing:' + NC)
 						for line in added:
-							print ('\t' + line)
+							print ('\t' + Red + Bold + line + NC)
 					if removed:
-						print ('\n\tMissing')
+						print ('\n\t' + Red + Bold + 'New' + NC)
 						for line in removed:
-							print ('\t' + line)
+							print ('\t' + Red + Bold + line + NC)
 					if not added and not removed:
-						print ("\n\t[!] There is nothing different.\n")
+						print ("\n\t" + Green + Bold + "[!] There is nothing different." + NC + "\n")
 	shutil.rmtree('tmp', ignore_errors=True)
 
 #MAIN CODE
