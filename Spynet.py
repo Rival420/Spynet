@@ -57,11 +57,11 @@ def get_arguments():
 	parser.add_argument("-s", "--service", action="store_true", help="resolve service software")
 	parser.add_argument("-sv", "--vuln", action="store_true", help="check if the service is vulnerable")
 	parser.add_argument("--clean", action="store_true", help="clean log files")
-	parser.add_argument("-a", "--add", action="store_true", help="add new vulnerability: --add-vuln \"service name, vuln name, link to exploit\"")
+	parser.add_argument("-a", "--add", dest="add", help="add new vulnerability: --add (-a is valid) \"service name, vuln name, link to exploit\" separated by \";\" withot space.")
 	requiredNamed = parser.add_argument_group('required named arguments')
 	requiredNamed.add_argument("-t", "--target", dest="target", help="networkhost ( e.g. 192.168.1.x) or networkhost + submask ( e.g. 192.168.1.0/24)")
 	args = parser.parse_args()
-	if not args.target and not args.clean:
+	if not args.target and not args.clean and not args.add:
 		parser.error("[-] Please specify a networkhost or networkhost with it's subnetmask. --help for more information\n")
 	if not args.start_port:
 		args.start_port = 1
@@ -76,7 +76,13 @@ def get_arguments():
 		print(Blue + Bold + "[!] Clean." + NC + '\n')
 		if not args.target:
 			sys.exit(0)
-	#print(len(args))
+	if args.add and len(sys.argv) == 3:
+		with open('vulns.csv','a') as fd:
+			fd.write(args.add.replace(";", "\t") + "\n")
+		print("Vulnerability added.\n")
+		sys.exit(0)
+	elif args.add and len(sys.argv) != 3:
+		parser.error("[-] Please use --add (-a is valid) \"service name, vuln name, link to exploit\" separated by \";\" withot space.\n")
 	return args
 
 def show_arguments():
