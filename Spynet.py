@@ -55,8 +55,9 @@ def get_arguments():
 	parser.add_argument("-o", "--output", action="store_true", help="save to log file")
 	parser.add_argument("-c", "--check", action="store_true", help="check differences between scans")
 	parser.add_argument("-s", "--service", action="store_true", help="resolve service software")
-	parser.add_argument("-sv", "--service-vuln", action="store_true", help="check if the service is vulnerable")
+	parser.add_argument("-sv", "--vuln", action="store_true", help="check if the service is vulnerable")
 	parser.add_argument("--clean", action="store_true", help="clean log files")
+	parser.add_argument("-a", "--add", action="store_true", help="add new vulnerability: --add-vuln \"service name, vuln name, link to exploit\"")
 	requiredNamed = parser.add_argument_group('required named arguments')
 	requiredNamed.add_argument("-t", "--target", dest="target", help="networkhost ( e.g. 192.168.1.x) or networkhost + submask ( e.g. 192.168.1.0/24)")
 	args = parser.parse_args()
@@ -75,6 +76,7 @@ def get_arguments():
 		print(Blue + Bold + "[!] Clean." + NC + '\n')
 		if not args.target:
 			sys.exit(0)
+	#print(len(args))
 	return args
 
 def show_arguments():
@@ -98,6 +100,10 @@ def show_arguments():
 		print(Blue + Bold + "Resolve service: " + NC + "On")
 	if not options.service:
 		print(Blue + Bold + "Resolve service: " + NC + "Off")
+	if options.vuln:
+		print(Blue + Bold + "Vuln check: " + NC + "On")
+	if not options.vuln:
+		print(Blue + Bold + "Vuln check: " + NC + "Off")
 
 def check_input(host):
 	action = input("\r" + Pink + "[!] Press " + Bold + "'s'" + NC + Pink + " to skip host or " + Bold + "'k'" + NC + Pink + " to finish the script: ")
@@ -117,7 +123,7 @@ def check_input(host):
 
 def print_hosts(hosts):
 	for host in hosts:
-		print("[+] Host: " + host)
+		print("\t[+] Host: " + host)
 
 def print_ports(host, ports):
 	print("[+] Host: " + host)
@@ -224,18 +230,21 @@ def portscan_host(hosts):
 				banner = ""
 			if banner != "" and banner[1] == "'":
 				banner = banner.replace("b'", "").replace("\\n'", "").replace("\\r", "").replace("Server ready.", "").replace("220 ", "").replace("_", " ")
-				with open('vulns.csv', newline = '') as vulns:
-					vuln_reader = csv.reader(vulns, delimiter='\t')
-					for vuln in vuln_reader:
-						if vuln[0] in banner:
-							vulnerabilities.append([])
-							vulnerabilities[vuln_index].append(target)
-							vulnerabilities[vuln_index].append(vuln[0])
-							vulnerabilities[vuln_index].append(vuln[1])
-							vulnerabilities[vuln_index].append(vuln[2])
-							isvulnerable += 1
-							vuln_index += 1
+				if options.vuln == 1:
+					with open('vulns.csv', newline = '') as vulns:
+						vuln_reader = csv.reader(vulns, delimiter='\t')
+						for vuln in vuln_reader:
+							if vuln[0] in banner:
+								vulnerabilities.append([])
+								vulnerabilities[vuln_index].append(target)
+								vulnerabilities[vuln_index].append(vuln[0])
+								vulnerabilities[vuln_index].append(vuln[1])
+								vulnerabilities[vuln_index].append(vuln[2])
+								isvulnerable += 1
+								vuln_index += 1
 			try:
+				if banner == "":
+					banner = " "
 				if options.verbose:
 					print(Blue + "Scaning port " + str(port) + " in " + target, end='\r')
 					if port == options.end_port - 1:
@@ -248,10 +257,13 @@ def portscan_host(hosts):
 					protocolname = 'tcp'
 					service = socket.getservbyport(port, protocolname)
 
-					if isvulnerable > 0:
-						vulnerable = Green + Bold + "Vulnerable" + NC
+					if options.vuln == 1 and options.service == 1:
+						if isvulnerable > 0:
+							vulnerable = Green + Bold + "Vulnerable" + NC
+						else:
+							vulnerable = Red + "Not vulnerable" + NC
 					else:
-						vulnerable = Red + "Not vulnerable" + NC
+						vulnerable = " "
 					host_results.append([Yellow + "\t[+] Open port: " + str(port), service, banner, vulnerable])
 					ports.append(result)
 				s.close()
@@ -336,6 +348,7 @@ def main(options):
 	Start_Time = dt.now()
 	host_results = discover_host(options.target)
 	if options.verbose:
+		print("\n[!] Host list:")
 		print_hosts(host_results)
 	#open log file
 	if options.output:
