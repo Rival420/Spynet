@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import http.client, argparse, socket, sys, os, difflib, shutil, http.client, urllib.request as urllib
+import http.client, argparse, socket, sys, os, difflib, shutil, http.client, urllib.request as urllib, csv
 try:
 	import scapy.all as scapy
 except ImportError:
@@ -55,6 +55,7 @@ def get_arguments():
 	parser.add_argument("-o", "--output", action="store_true", help="save to log file")
 	parser.add_argument("-c", "--check", action="store_true", help="check differences between scans")
 	parser.add_argument("-s", "--service", action="store_true", help="resolve service software")
+	parser.add_argument("-sv", "--service-vuln", action="store_true", help="check if the service is vulnerable")
 	parser.add_argument("--clean", action="store_true", help="clean log files")
 	requiredNamed = parser.add_argument_group('required named arguments')
 	requiredNamed.add_argument("-t", "--target", dest="target", help="networkhost ( e.g. 192.168.1.x) or networkhost + submask ( e.g. 192.168.1.0/24)")
@@ -183,13 +184,28 @@ def write_log(host, msg):
 	if options.output:
 		logfile.write(msg)
 
+
+def print_table(data, cols, wide):
+    '''Prints formatted data on columns of given width.'''
+    n, r = divmod(len(data), cols)
+    pat = '{{:{}}}'.format(wide)
+    line = '\n'.join(pat * cols for _ in range(n))
+    last_line = pat * r
+    print(line.format(*data))
+    print(last_line.format(*data[n*cols:]))
+
+
+
 def portscan_host(hosts):
 	print("")
 	#prepare log files
 	if os.path.exists('tmp'):
 		shutil.rmtree('tmp', ignore_errors=True)
 	for host in hosts:
+		vulnerabilities = []
+		host_results = []
 		skip_host = 0
+		vuln_index = 0
 		if not os.path.exists('tmp'):
 			os.makedirs('tmp')
 		print(Green + "[+] Port scan started for host: " + Bold +  host + NC)
@@ -198,6 +214,7 @@ def portscan_host(hosts):
 		target = socket.gethostbyname(host)
 		ports = []
 		for port in range(options.start_port, options.end_port):
+			isvulnerable = 0
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			if options.service:
 				banner = get_banner(s, target, port)
@@ -206,7 +223,18 @@ def portscan_host(hosts):
 			else:
 				banner = ""
 			if banner != "" and banner[1] == "'":
-				banner = banner.replace("b'", "").replace("\\n'", "").replace("\\r", "").replace("Server ready.", "")
+				banner = banner.replace("b'", "").replace("\\n'", "").replace("\\r", "").replace("Server ready.", "").replace("220 ", "").replace("_", " ")
+				with open('vulns.csv', newline = '') as vulns:
+					vuln_reader = csv.reader(vulns, delimiter='\t')
+					for vuln in vuln_reader:
+						if vuln[0] in banner:
+							vulnerabilities.append([])
+							vulnerabilities[vuln_index].append(target)
+							vulnerabilities[vuln_index].append(vuln[0])
+							vulnerabilities[vuln_index].append(vuln[1])
+							vulnerabilities[vuln_index].append(vuln[2])
+							isvulnerable += 1
+							vuln_index += 1
 			try:
 				if options.verbose:
 					print(Blue + "Scaning port " + str(port) + " in " + target, end='\r')
@@ -220,17 +248,45 @@ def portscan_host(hosts):
 					protocolname = 'tcp'
 					service = socket.getservbyport(port, protocolname)
 
-					print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\t" + service + "\t\t" + banner + NC)
-					write_log(host, "\t[+] Open port: " + str(port) + "\t" + service + "\t\t" + banner + "\n")
+					if isvulnerable > 0:
+						vulnerable = Green + Bold + "Vulnerable" + NC
+					else:
+						vulnerable = Red + "Not vulnerable" + NC
+					host_results.append([Yellow + "\t[+] Open port: " + str(port), service, banner, vulnerable])
 					ports.append(result)
 				s.close()
 			except socket.error:
-				print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\tunknown" + "\t\t" + banner + NC)
-				write_log(host, "\t[+] Open port: " + str(port) + "\tunknown" + "\t\t" + banner + "\n")
+				host_results.append([Yellow + "\t[+] Open port: " + str(port), service, banner, vulnerable])
 			except KeyboardInterrupt:
 				skip_host = check_input(host)
 			if skip_host == 1:
 				break
+
+		#Print host_results array
+		s = [[str(e) for e in row] for row in host_results]
+		lens = [max(map(len, col)) for col in zip(*s)]
+		fmt = '\t'.join('{{:{}}}'.format(x) for x in lens)
+		table = [fmt.format(*row) for row in s]
+		print ('\n'.join(table))
+		write_log(host, '\n'.join(table).replace(Yellow, "").replace(Green, "").replace(Red, "").replace(Bold, "").replace(NC, ""))
+
+		last_host = ""
+		for line in vulnerabilities:
+			if last_host != line[0]:
+				vuln_results = []
+				print("")
+				print(Green + "\t[!] Vulnerabilities for " + line[0] + NC)
+				write_log(host, "\n\t[!] Vulnerabilities for " + line[0] + "\n")
+				last_host = line[0]
+				for row in vulnerabilities:
+					vuln_results.append([Yellow + "\t\t[+] " + row[1], row[2], row[3] + NC])
+				#Print vuln_results array
+				s = [[str(e) for e in row] for row in vuln_results]
+				lens = [max(map(len, col)) for col in zip(*s)]
+				fmt = '\t'.join('{{:{}}}'.format(x) for x in lens)
+				table = [fmt.format(*row) for row in s]
+				print ('\n'.join(table))
+				write_log(host, '\n'.join(table).replace(Yellow, "").replace(Bold, "").replace(NC, ""))
 
 def check_scans(hosts):
 	if not os.path.exists('logs'):
@@ -298,6 +354,8 @@ def main(options):
 	#Check differences between scans
 	if options.check:
 		check_scans(host_results)
+
+	shutil.rmtree('tmp', ignore_errors=True)
 
 if __name__== "__main__":
 	actual_time = dt.now().strftime("%d%m%Y_%H%M%S")
