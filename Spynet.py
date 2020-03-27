@@ -76,7 +76,6 @@ def get_arguments():
 		print(Blue + Bold + "[!] Clean." + NC + '\n')
 		if not args.target:
 			sys.exit(0)
-	#print(len(args))
 	return args
 
 def show_arguments():
