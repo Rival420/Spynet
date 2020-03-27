@@ -1,0 +1,6 @@
+Service	Vuln_Name	Link
+ProFTPD 1.3.5	mod_copy (metasploit)	https://www.exploit-db.com/exploits/37262
+ProFTPD 1.3.5	mod_copy	https://www.exploit-db.com/exploits/36803
+ProFTPD 1.3.5	File Copy	https://www.exploit-db.com/exploits/36742
+OpenSSH 7.4	agent Protocol Arbitrary Library Loading	https://www.exploit-db.com/exploits/40963
+OpenSSH 7.4	UsePrivilegeSeparation Disabled	https://www.exploit-db.com/exploits/40962
