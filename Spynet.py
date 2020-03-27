@@ -103,7 +103,7 @@ def check_input(host):
 	if action == 's':
 		print(Blue + "[-] Skipping host: " + Bold + host + NC)
 		write_log(host, "[-] Skipping host: " + host + "\n")
-		return 0
+		return 1
 	elif action == 'k':
 		print(Red + "[!] Exiting." + NC)
 		print("")
@@ -112,6 +112,7 @@ def check_input(host):
 		sys.exit(0)
 	else:
 		print(Red + "[!] Unrecognized option." + NC)
+		return 0
 
 def print_hosts(hosts):
 	for host in hosts:
@@ -146,7 +147,7 @@ def get_banner(s, host, port):
 			service = str(c.info()['Server'])
 			return service
 		except KeyboardInterrupt:
-			check_input(host)
+			return check_input(host)
 		except:
 			pass
 		try:
@@ -157,7 +158,7 @@ def get_banner(s, host, port):
 			service = str(c.info()['Server'])
 			return service
 		except KeyboardInterrupt:
-			check_input(host)
+			return check_input(host)
 		except:
 			pass
 		try:
@@ -167,11 +168,11 @@ def get_banner(s, host, port):
 			service = str(s.recv(1024))
 			return service
 		except KeyboardInterrupt:
-			check_input(host)
+			return check_input(host)
 		except:
 			pass
 	except KeyboardInterrupt:
-		check_input(host)
+		return check_input(host)
 	return ""
 
 def write_log(host, msg):
@@ -188,6 +189,7 @@ def portscan_host(hosts):
 	if os.path.exists('tmp'):
 		shutil.rmtree('tmp', ignore_errors=True)
 	for host in hosts:
+		skip_host = 0
 		if not os.path.exists('tmp'):
 			os.makedirs('tmp')
 		print(Green + "[+] Port scan started for host: " + Bold +  host + NC)
@@ -199,6 +201,8 @@ def portscan_host(hosts):
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			if options.service:
 				banner = get_banner(s, target, port)
+				if banner == 1:
+					break
 			else:
 				banner = ""
 			if banner != "" and banner[1] == "'":
@@ -224,7 +228,8 @@ def portscan_host(hosts):
 				print(Yellow + "\t[+] Open port: " + Bold + str(port) + "\tunknown" + "\t\t" + banner + NC)
 				write_log(host, "\t[+] Open port: " + str(port) + "\tunknown" + "\t\t" + banner + "\n")
 			except KeyboardInterrupt:
-				check_input(host)
+				skip_host = check_input(host)
+			if skip_host == 1:
 				break
 
 def check_scans(hosts):
