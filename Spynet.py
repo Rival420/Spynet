@@ -148,7 +148,9 @@ def discover_host(ip):
 		client_ip = str(client_ip)
 		client_list.append(client_ip)
 
-	return client_list
+	sorted_list = sorted(client_list, key=lambda ip: struct.unpack("!L", socket.inet_aton(ip))[0])
+
+	return sorted_list
 
 def get_banner(s, host, port):
 	try:
@@ -252,7 +254,7 @@ def portscan_host(hosts):
 				if banner == "":
 					banner = " "
 				if options.verbose:
-					print(Blue + "Scaning port " + str(port) + " in " + target, end='\r')
+					print(Blue + "\t[i] Scaning port " + str(port), end='\r')
 					if port == options.end_port - 1:
 						sys.stdout.write("\033[K")
 				socket.setdefaulttimeout(options.default_timeout)
