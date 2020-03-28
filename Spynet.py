@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import http.client, argparse, socket, sys, os, difflib, shutil, http.client, urllib.request as urllib, csv
+import http.client, argparse, requests, socket, sys, os, difflib, shutil, http.client, csv, urllib
 try:
 	import scapy.all as scapy
 except ImportError:
@@ -156,7 +156,7 @@ def get_banner(s, host, port):
 			conn = http.client.HTTPConnection(host, port)
 			conn.request("GET", "/")
 			conn.getresponse()
-			c = urllib.urlopen("http://"  + host + ":" + str(port))
+			c = urllib.request.urlopen("http://"  + host + ":" + str(port))
 			service = str(c.info()['Server'])
 			return service
 		except KeyboardInterrupt:
@@ -167,7 +167,7 @@ def get_banner(s, host, port):
 			conn = http.client.HTTPSConnection(host, port)
 			conn.request("GET", "/")
 			conn.getresponse()
-			c = urllib.urlopen("https://"  + host + ":" + str(port))
+			c = urllib.request.urlopen("https://"  + host + ":" + str(port))
 			service = str(c.info()['Server'])
 			return service
 		except KeyboardInterrupt:
