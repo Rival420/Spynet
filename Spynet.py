@@ -1,10 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import http.client, argparse, requests, socket, sys, os, difflib, shutil, http.client, csv, urllib
 try:
 	import scapy.all as scapy
 except ImportError:
 	sys.exit("\033[0;31m\033[1mYou need scapy!\033[0m\033[0;31m You can instal it with '\033[0;31m\033[1msudo pip3 install scapy\033[0m\033[0;31m' or dowload it from '\033[0;31m\033[1mhttps://github.com/secdev/scapy\033[0m\033[0;31m'\033[0m")
+try:
+	from git import Repo
+except ImportError:
+	sys.exit("\033[0;31m\033[1mYou need gitpython!\033[0m\033[0;31m You can instal it with '\033[0;31m\033[1msudo pip3 install gitpython\033[0m")
 from datetime import datetime as dt
 
 Bold='\033[1m'
@@ -77,9 +81,10 @@ def get_arguments():
 		if not args.target:
 			sys.exit(0)
 	if args.add and len(sys.argv) == 3:
-		with open('vulns.csv','a') as fd:
+		with open('vulndb/vulns.csv','a') as fd:
 			fd.write(args.add.replace(";", "\t") + "\n")
-		print("Vulnerability added.\n")
+		update_vulndb('upload')
+		print(Green + Bold + "\nVulnerability added.\n" + NC)
 		sys.exit(0)
 	elif args.add and len(sys.argv) != 3:
 		parser.error("[-] Please use --add (-a is valid) \"service name, vuln name, link to exploit\" separated by \";\" withot space.\n")
@@ -198,7 +203,6 @@ def write_log(host, msg):
 	if options.output:
 		logfile.write(msg)
 
-
 def print_table(data, cols, wide):
     '''Prints formatted data on columns of given width.'''
     n, r = divmod(len(data), cols)
@@ -207,8 +211,6 @@ def print_table(data, cols, wide):
     last_line = pat * r
     print(line.format(*data))
     print(last_line.format(*data[n*cols:]))
-
-
 
 def portscan_host(hosts):
 	print("")
@@ -239,7 +241,7 @@ def portscan_host(hosts):
 			if banner != "" and banner[1] == "'":
 				banner = banner.replace("b'", "").replace("\\n'", "").replace("\\r", "").replace("Server ready.", "").replace("220 ", "").replace("_", " ")
 				if options.vuln == 1:
-					with open('vulns.csv', newline = '') as vulns:
+					with open('vulndb/vulns.csv', newline = '') as vulns:
 						vuln_reader = csv.reader(vulns, delimiter='\t')
 						for vuln in vuln_reader:
 							if vuln[0] in banner:
@@ -349,7 +351,48 @@ def check_scans(hosts):
 						print ("\n\t" + Green + Bold + "[!] There is nothing different." + NC + "\n")
 	shutil.rmtree('tmp', ignore_errors=True)
 
+def update_vulndb(action):
+	if action == 'update':
+		if not os.path.exists('vulndb'):
+			os.makedirs('vulndb')
+			vulndb = 'vulndb/'
+			Repo.clone_from('https://github.com/Rival420/VulnDB', vulndb, branch='master', depth=1)
+		else:
+			repo = Repo('vulndb/')
+			origin = repo.remote('origin')
+			origin.pull()
+		print(Green + Bold + "\nDatabase updated.\n" + NC)
+
+	if action == 'upload':
+		if not os.path.exists('vulndb'):
+			os.makedirs('vulndb')
+			vulndb = 'vulndb/'
+			Repo.clone_from('https://github.com/Rival420/VulnDB', vulndb, branch='master', depth=1)
+
+			repo = Repo('vulndb/')
+			repo.git.add(update=True)
+			repo.index.commit('Added new vuln' + actual_time)
+			origin = repo.remote(name='origin')
+			origin.push()
+		else:
+			repo = Repo('vulndb/')
+			repo.git.add(update=True)
+			repo.index.commit('Added new vuln' + actual_time)
+			origin = repo.remote(name='origin')
+			origin.push()
+
 def main(options):
+	#Update vulndb
+	ans = input('Would you like to update the vulnerabilities database? ').lower().strip()
+	if ans in ['yes', 'y']:
+		sys.stdout.write("\033[F")
+		print("                                                          ")
+		sys.stdout.write("\033[F")
+		update_vulndb('update')
+	if ans in ['no', 'n']:
+		sys.stdout.write("\033[F")
+		print("                                                          ")
+		sys.stdout.write("\033[F")
     #parse arguments passed by user
 	show_arguments()
 	#scan for alive hosts in the range
