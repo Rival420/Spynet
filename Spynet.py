@@ -371,13 +371,13 @@ def update_vulndb(action):
 
 			repo = Repo('vulndb/')
 			repo.git.add(update=True)
-			repo.index.commit('Added new vuln' + actual_time)
+			repo.index.commit('Added new vuln: ' + actual_time)
 			origin = repo.remote(name='origin')
 			origin.push()
 		else:
 			repo = Repo('vulndb/')
 			repo.git.add(update=True)
-			repo.index.commit('Added new vuln' + actual_time)
+			repo.index.commit('Added new vuln: ' + actual_time)
 			origin = repo.remote(name='origin')
 			origin.push()
 
