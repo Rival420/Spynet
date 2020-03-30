@@ -81,7 +81,17 @@ def get_arguments():
 		if not args.target:
 			sys.exit(0)
 	if args.add and len(sys.argv) == 3:
+		if not os.path.exists('vulndb'):
+			os.makedirs('vulndb')
+			vulndb = 'vulndb/'
+			Repo.clone_from('https://github.com/Rival420/VulnDB', vulndb)
+		if not os.path.exists('vulndb_requests'):
+			os.makedirs('vulndb_requests')
+			vulndb_requests = 'vulndb_requests/'
+			Repo.clone_from('https://github.com/Rival420/VulnDB', vulndb_requests, branch='requests')
 		with open('vulndb/vulns.csv','a') as fd:
+			fd.write(args.add.replace(";", "\t") + "\n")
+		with open('vulndb_requests/vulns.csv','a') as fd:
 			fd.write(args.add.replace(";", "\t") + "\n")
 		update_vulndb('upload')
 		print(Green + Bold + "\nVulnerability added.\n" + NC)
@@ -356,30 +366,32 @@ def update_vulndb(action):
 		if not os.path.exists('vulndb'):
 			os.makedirs('vulndb')
 			vulndb = 'vulndb/'
-			Repo.clone_from('https://github.com/Rival420/VulnDB', vulndb, branch='master', depth=1)
+			Repo.clone_from('https://github.com/Rival420/VulnDB', vulndb, branch='master')
 		else:
-			repo = Repo('vulndb/')
-			origin = repo.remote('origin')
-			origin.pull()
+			shutil.rmtree('vulndb', ignore_errors=True)
+			os.makedirs('vulndb')
+			vulndb = 'vulndb/'
+			Repo.clone_from('https://github.com/Rival420/VulnDB', vulndb, branch='master')
 		print(Green + Bold + "\nDatabase updated.\n" + NC)
 
 	if action == 'upload':
-		if not os.path.exists('vulndb'):
-			os.makedirs('vulndb')
-			vulndb = 'vulndb/'
-			Repo.clone_from('https://github.com/Rival420/VulnDB', vulndb, branch='master', depth=1)
+		if not os.path.exists('vulndb_requests'):
+			os.makedirs('vulndb_requests')
+			vulndb_requests = 'vulndb_requests/'
+			Repo.clone_from('https://github.com/Rival420/VulnDB', vulndb_requests, branch='requests')
 
-			repo = Repo('vulndb/')
-			repo.git.add(update=True)
+			repo = Repo('vulndb_requests/')
+			repo.git.add(all=True)
 			repo.index.commit('Added new vuln: ' + actual_time)
 			origin = repo.remote(name='origin')
 			origin.push()
 		else:
-			repo = Repo('vulndb/')
-			repo.git.add(update=True)
+			repo = Repo('vulndb_requests/')
+			repo.git.add(all=True)
 			repo.index.commit('Added new vuln: ' + actual_time)
 			origin = repo.remote(name='origin')
 			origin.push()
+		shutil.rmtree('vulndb_requests', ignore_errors=True)
 
 def main(options):
 	#Update vulndb
@@ -390,6 +402,10 @@ def main(options):
 		sys.stdout.write("\033[F")
 		update_vulndb('update')
 	if ans in ['no', 'n']:
+		if not os.path.exists('vulndb'):
+			os.makedirs('vulndb')
+			vulndb = 'vulndb/'
+			Repo.clone_from('https://github.com/Rival420/VulnDB', vulndb, branch='master', depth=1)
 		sys.stdout.write("\033[F")
 		print("                                                          ")
 		sys.stdout.write("\033[F")
