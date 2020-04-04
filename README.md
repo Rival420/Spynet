@@ -1,6 +1,13 @@
 # Spynet
 A tool written in *python3* to scan for live hosts on a network and scan for open ports.
 
+*download and install
+```
+git clone https://github.com/Rival420/Spynet.git
+cd Spynet/
+pip3 install -r requirements.txt
+```
+
 Should be used like this on default LAN:
 
 `python3 Spynet.py -t 192.168.1.0/24`
@@ -18,4 +25,4 @@ Extra: portscan on certain host can be skipped with KeyboardInterrupt (ctrl+C)
 
 Made By Rival23 and Requird
 
-Thanks for help: Comradecereal
+Thanks for help: Comradecereal and X4v1l0k !!
