@@ -1,14 +1,14 @@
 # Spynet
 A tool written in *python3* to scan for live hosts on a network and scan for open ports.
 
-*download and install*
+**download and install**
 ```
 git clone https://github.com/Rival420/Spynet.git
 cd Spynet/
 pip3 install -r requirements.txt
 ```
 
-*Usage*
+**Usage**
 
 Should be used like this on default LAN:
 
