@@ -9,6 +9,7 @@ pip3 install -r requirements.txt
 ```
 
 *Usage*
+
 Should be used like this on default LAN:
 
 `python3 Spynet.py -t 192.168.1.0/24`
