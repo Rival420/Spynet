@@ -1,21 +1,46 @@
 # Spynet
-A tool written in *python3* to scan for live hosts on a network and scan for open ports.
 
-Should be used like this on default LAN:
+A simple and efficient Python script to scan live hosts and open ports on your home network. This script uses ARP scanning to detect live hosts and asyncio for faster port scanning.
 
-`python3 Spynet.py -t 192.168.1.0/24`
+## Requirements
 
-I added extra functionality so you have more control over the portscan and it's range/speed
+- Python 3.7+
+- netifaces==0.11.0
+- scapy==2.4.5
 
-*First_port: -f or --first-port => can be used to specify starting port (default: 1)
-* Last_port: -l or --last-port => can be used to specify the last port (default: 1024)
-  * setting this higher can result in errors, make sure to adapt defaulttimeout with it!
-* Default_Timeout: changing this will affect the speed of the script. (default: 0.01)
-* verbosity: -v or --verbose => this is mainly for debugging purpose. this will output all ports it's scanned.
+## Installation
 
-Extra: portscan on certain host can be skipped with KeyboardInterrupt (ctrl+C)
+1. Clone this repository or download the script files.
+2. Install the required libraries: 
+```
+pip install -r requirements.txt
+```
 
 
-Made By Rival23 and Requird
+## Usage
 
-Thanks for help: Comradecereal
+By default, the script scans the local network and the first 10,000 ports:
+```
+python spynet.py
+```
+
+
+To scan a specific IP or IP range, use the `-i` or `--ip` option:
+```
+python spynet.py -i 192.168.1.1
+```
+
+
+To scan a specific port or port range, use the `-p` or `--port` option:
+```
+python spynet.py -p 80-100
+```
+
+
+To save the results in a specific file, use the `-o` or `--output` option:
+```
+python spynet.py -o results.json
+```
+
+
+The script will display live hosts and their open ports on the console and save the results in a JSON file.
