@@ -50,7 +50,7 @@ def save_json(filename: str, data: List[dict]) -> None:
         json.dump(data, f, indent=2)
 
 async def main():
-    parser = argparse.ArgumentParser(description='Home Network Scanner')
+    parser = argparse.ArgumentParser(description='Spynet')
     parser.add_argument('-i', '--ip', default=get_local_network(), help="Target IP or IP range (e.g., '192.168.1.1', '192.168.1.1-192.168.1.5' or '192.168.1.0/24')")
     parser.add_argument('-p', '--port', default='1-10000', help="Target port or port range (e.g., '80', '80-100' or 'all')")
     parser.add_argument('-o', '--output', default='output.json', help="Output file for JSON results")
@@ -79,7 +79,7 @@ async def main():
     for ip in ip_range:
         if arp_scan(str(ip)):
             scan_result = await scan_ports(str(ip), ports_range)
-	    live_hosts.append(scan_result)
+            live_hosts.append(scan_result)
             print(f"Host {ip} is alive with open ports: {scan_result['ports']}")
 
     save_json(args.output, live_hosts)
